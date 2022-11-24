@@ -13,6 +13,7 @@ server port 8083
 | METHOD | URL              | DESCRIPTION           |
 |--------|------------------|-----------------------|
 | POST   | /order           | create order          |
+| GET    | /order/          | get order             |
 | GET    | /order/{orderId} | get order info        |
 | PUT    | /order/{orderId} | update order info *** |
 | DELETE | /order/{orderId} | delete order          |
