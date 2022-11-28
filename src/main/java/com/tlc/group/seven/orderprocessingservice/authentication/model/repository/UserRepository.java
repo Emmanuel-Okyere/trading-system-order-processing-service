@@ -1,4 +1,4 @@
-package com.tlc.group.seven.orderprocessingservice.authentication.repository;
+package com.tlc.group.seven.orderprocessingservice.authentication.model.repository;
 
 import com.tlc.group.seven.orderprocessingservice.authentication.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
