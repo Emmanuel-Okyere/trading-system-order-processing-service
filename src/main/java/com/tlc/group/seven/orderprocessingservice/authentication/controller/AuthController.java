@@ -23,6 +23,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -56,15 +57,21 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<?> registerUser(@Valid @RequestBody SignupRequest signUpRequest) {
         if (userRepository.existsByName(signUpRequest.getName())) {
+            HashMap<String,String> hashResponse = new HashMap<>();
+            hashResponse.put("status","failure");
+            hashResponse.put("message","name already taken");
             return ResponseEntity
                     .badRequest()
-                    .body(new MessageResponse("Error: name is already taken!"));
+                    .body(hashResponse);
         }
 
         if (userRepository.existsByEmail(signUpRequest.getEmail())) {
+            HashMap<String,String> hashResponse = new HashMap<>();
+            hashResponse.put("status","failure");
+            hashResponse.put("message","email already taken");
             return ResponseEntity
                     .badRequest()
-                    .body(new MessageResponse("Error: Email is already in use!"));
+                    .body(hashResponse);
         }
 
         // Create new user's account

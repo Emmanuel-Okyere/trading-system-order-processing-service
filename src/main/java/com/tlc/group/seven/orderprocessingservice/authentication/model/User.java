@@ -28,6 +28,7 @@ public class User {
     private Long iD;
     @NotBlank(message = "Name required")
     @Size(max = 50)
+    @Column(unique = false)
     private String name;
     @NotBlank(message = "Email required")
     @Email
