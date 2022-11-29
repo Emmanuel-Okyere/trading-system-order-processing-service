@@ -48,10 +48,9 @@ public class AuthController {
         Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(loginRequest.getEmail(),loginRequest.getPassword()));
         SecurityContextHolder.getContext().setAuthentication(authentication);
         String jwt = jwtUtils.generateJwtToken(authentication);
-        System.out.println("*************************O amfss ***************");
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
         List<String> roles = userDetails.getAuthorities().stream().map(GrantedAuthority::getAuthority).collect(Collectors.toList());
-        return ResponseEntity.ok(new JwtResponse(jwt, userDetails.getId(),userDetails.getName(),userDetails.getEmail(), roles));
+        return ResponseEntity.ok(new JwtResponse(jwt, userDetails.getId(),userDetails.getName(),userDetails.getEmail(), roles,userDetails.getBalance()));
     }
 
     @PostMapping("/register")

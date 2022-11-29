@@ -23,7 +23,6 @@ public class JwtUtils {
 
     public String generateJwtToken(Authentication authentication){
         UserDetailsImpl userPrinciple  =  (UserDetailsImpl) authentication.getPrincipal();
-        System.out.println("************************I am in here for some pussy******************88");
         return JWT.create().withSubject(userPrinciple.getEmail())
                 .withIssuedAt(new Date())
                 .withExpiresAt(new Date(System.currentTimeMillis() + jwtExpirationMS))
@@ -43,7 +42,6 @@ public class JwtUtils {
     }
 
     public String getEmailFromJwtToken(String jwt) {
-        System.out.println("******************* I am trying to get some here too ***************");
         return JWT.decode(jwt).getSubject();
     }
 }
