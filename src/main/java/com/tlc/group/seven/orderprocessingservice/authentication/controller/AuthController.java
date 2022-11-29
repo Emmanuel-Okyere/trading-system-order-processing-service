@@ -1,6 +1,7 @@
 package com.tlc.group.seven.orderprocessingservice.authentication.controller;
 
 
+import com.tlc.group.seven.orderprocessingservice.authentication.exceptions.RoleNotFoundException;
 import com.tlc.group.seven.orderprocessingservice.authentication.model.ERole;
 import com.tlc.group.seven.orderprocessingservice.authentication.model.Role;
 import com.tlc.group.seven.orderprocessingservice.authentication.model.User;
@@ -56,7 +57,7 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<?> registerUser(@Valid @RequestBody SignupRequest signUpRequest) {
+    public ResponseEntity<?> registerUser(@Valid @RequestBody SignupRequest signUpRequest) throws RoleNotFoundException {
         if (userRepository.existsByEmail(signUpRequest.getEmail())) {
             HashMap<String,String> hashResponse = new HashMap<>();
             hashResponse.put("status","failure");
@@ -74,23 +75,23 @@ public class AuthController {
         Set<Role> roles = new HashSet<>();
         if (strRoles == null) {
             Role userRole = roleRepository.findByName(ERole.USER)
-                    .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
+                    .orElseThrow(() -> new RoleNotFoundException("Error: Role is not found."));
             roles.add(userRole);
         } else {
-            strRoles.forEach(role -> {
+            for (String role : strRoles) {
                 switch (role) {
                     case "admin" -> {
                         Role adminRole = roleRepository.findByName(ERole.ADMIN)
-                                .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
+                                .orElseThrow(() -> new RoleNotFoundException("Error: Role is not found."));
                         roles.add(adminRole);
                     }
                     default -> {
                         Role userRole = roleRepository.findByName(ERole.USER)
-                                .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
+                                .orElseThrow(() -> new RoleNotFoundException("Error: Role is not found."));
                         roles.add(userRole);
                     }
                 }
-            });
+            }
         }
         user.setRoles(roles);
         userRepository.save(user);
