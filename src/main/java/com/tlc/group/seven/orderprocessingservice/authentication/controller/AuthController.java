@@ -13,6 +13,7 @@ import com.tlc.group.seven.orderprocessingservice.authentication.repository.User
 import com.tlc.group.seven.orderprocessingservice.authentication.security.jwt.JwtUtils;
 import com.tlc.group.seven.orderprocessingservice.authentication.service.UserDetailsImpl;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -56,15 +57,6 @@ public class AuthController {
 
     @PostMapping("/register")
     public ResponseEntity<?> registerUser(@Valid @RequestBody SignupRequest signUpRequest) {
-        if (userRepository.existsByName(signUpRequest.getName())) {
-            HashMap<String,String> hashResponse = new HashMap<>();
-            hashResponse.put("status","failure");
-            hashResponse.put("message","name already taken");
-            return ResponseEntity
-                    .badRequest()
-                    .body(hashResponse);
-        }
-
         if (userRepository.existsByEmail(signUpRequest.getEmail())) {
             HashMap<String,String> hashResponse = new HashMap<>();
             hashResponse.put("status","failure");
@@ -73,7 +65,6 @@ public class AuthController {
                     .badRequest()
                     .body(hashResponse);
         }
-
         // Create new user's account
         User user = new User(signUpRequest.getName(),
                 signUpRequest.getEmail(),
@@ -81,7 +72,6 @@ public class AuthController {
 
         Set<String> strRoles = signUpRequest.getRole();
         Set<Role> roles = new HashSet<>();
-
         if (strRoles == null) {
             Role userRole = roleRepository.findByName(ERole.USER)
                     .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
@@ -102,10 +92,14 @@ public class AuthController {
                 }
             });
         }
-
         user.setRoles(roles);
         userRepository.save(user);
-
-        return ResponseEntity.ok(new MessageResponse("User registered successfully!"));
+        HashMap<String,String> userCreatedResponse = new HashMap<>();
+        userCreatedResponse.put("status", "success");
+        userCreatedResponse.put("message", "user created successfully");
+        userCreatedResponse.put("id", user.getID().toString());
+        userCreatedResponse.put("name", user.getName());
+        userCreatedResponse.put("email", user.getEmail());
+        return ResponseEntity.status(HttpStatus.CREATED).body(userCreatedResponse);
     }
 }

@@ -7,7 +7,7 @@ import java.util.List;
 @Data
 public class JwtResponse {
     private String accessToken;
-    private String type = "Bearer";
+//    private String type = "Bearer";
     private Long id;
     private String name;
     private String email;

@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.annotation.CreatedDate;
 
 import javax.persistence.*;
@@ -19,7 +20,6 @@ import java.util.Set;
 @Setter
 @Entity
 @Table(name = "users", uniqueConstraints = {
-        @UniqueConstraint(columnNames = {"name"}),
         @UniqueConstraint(columnNames = {"email"})
 })
 public class User {
@@ -28,7 +28,7 @@ public class User {
     private Long iD;
     @NotBlank(message = "Name required")
     @Size(max = 50)
-    @Column(unique = false)
+    @Column
     private String name;
     @NotBlank(message = "Email required")
     @Email
@@ -38,7 +38,7 @@ public class User {
     @Size(max = 120, min = 8)
     private String password;
     @Column
-    private Double balance;
+    private double balance;
     @ManyToMany
     @JoinTable(name = "users_role",joinColumns = @JoinColumn(name = "users_id"),inverseJoinColumns = @JoinColumn(name = "role_id"))
     private Set<Role> roles = new HashSet<>();
