@@ -1,7 +1,7 @@
-package com.tlc.group.seven.orderprocessingservice.controller;
+package com.tlc.group.seven.orderprocessingservice.kafka.controller;
 
 import com.tlc.group.seven.orderprocessingservice.kafka.producer.KafkaProducer;
-import com.tlc.group.seven.orderprocessingservice.model.log.LogData;
+import com.tlc.group.seven.orderprocessingservice.log.LogData;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;

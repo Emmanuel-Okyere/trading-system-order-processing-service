@@ -1,4 +1,4 @@
-package com.tlc.group.seven.orderprocessingservice.model.log;
+package com.tlc.group.seven.orderprocessingservice.log;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
