@@ -5,5 +5,4 @@ public interface ServiceConstants {
      String exchange2URL = "https://exchange2.matraining.com/1567ae46-8d44-4210-bf91-9d5c61290d0f";
 
      String successStatus = "00";
-     String
 }
