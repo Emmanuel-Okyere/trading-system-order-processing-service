@@ -1,10 +1,18 @@
 package com.tlc.group.seven.orderprocessingservice.order.service;
 
+import com.tlc.group.seven.orderprocessingservice.authentication.model.User;
+import com.tlc.group.seven.orderprocessingservice.authentication.repository.UserRepository;
+import com.tlc.group.seven.orderprocessingservice.authentication.service.UserDetailsImpl;
+import com.tlc.group.seven.orderprocessingservice.constant.ServiceConstants;
 import com.tlc.group.seven.orderprocessingservice.order.model.Order;
+import com.tlc.group.seven.orderprocessingservice.order.payload.OrderResponse;
 import com.tlc.group.seven.orderprocessingservice.order.repository.OrderRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
@@ -14,6 +22,9 @@ import java.util.HashMap;
 @Service
 public class OrderService {
 
+    @Autowired
+    private UserRepository userRepository;
+    @Autowired
     private OrderRepository repository;
 
     @Autowired
@@ -21,24 +32,21 @@ public class OrderService {
         this.repository = repository;
     }
 
-    public ResponseEntity<?> createOrder(Order order){
-        String exchangeURL = "https://exchange.matraining.com/1567ae46-8d44-4210-bf91-9d5c61290d0f";
-        String exchange2URL = "https://exchange2.matraining.com/1567ae46-8d44-4210-bf91-9d5c61290d0f";
+    public OrderResponse createOrder(Order order){
+        String exchangeURL = ServiceConstants.exchangeURL;
+        String exchange2URL = ServiceConstants.exchange2URL;
         WebClient webClient = WebClient.create(exchangeURL);
-        System.out.println(order.getQuantity());
         String response = webClient.post().uri("/order").body(Mono.just(order), Order.class).retrieve().bodyToMono(String.class).block();
         assert response != null;
         order.setOrderId(response.substring(1,response.length()-1));
+        UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        User user  = userRepository.getReferenceById(userDetails.getId());
+        order.setUsers(user);
         repository.save(order);
-        HashMap<String,Object> orderCreatedResponse = new HashMap<>();
-        orderCreatedResponse.put("status", "00");
-        orderCreatedResponse.put("message", "order created successfully");
-        orderCreatedResponse.put("id", order.getID());
-        orderCreatedResponse.put("orderId", order.getOrderId());
-        orderCreatedResponse.put("quantity", order.getQuantity());
-        orderCreatedResponse.put("product", order.getProduct());
-        orderCreatedResponse.put("price", order.getPrice());
-        orderCreatedResponse.put("type", order.getType());
-        return ResponseEntity.status(HttpStatus.CREATED).body(orderCreatedResponse);
+        System.out.println(user.getName());
+        return new OrderResponse("00","order created successfully",
+                order.getID(),order.getOrderId(),
+                order.getQuantity(),order.getProduct(),
+                order.getPrice(),order.getType());
     }
 }

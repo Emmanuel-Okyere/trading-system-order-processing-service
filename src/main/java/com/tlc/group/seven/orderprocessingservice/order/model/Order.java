@@ -1,5 +1,7 @@
 package com.tlc.group.seven.orderprocessingservice.order.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.tlc.group.seven.orderprocessingservice.authentication.model.User;
 import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
@@ -33,4 +35,12 @@ public class Order {
     private Date createdAt;
     @UpdateTimestamp
     private Date updatedAt;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "users_id")
+    private User users;
+
+    public void setUser(User user){
+        this.users= user;
+    }
 }
