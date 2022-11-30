@@ -8,16 +8,12 @@ import com.tlc.group.seven.orderprocessingservice.order.model.Order;
 import com.tlc.group.seven.orderprocessingservice.order.payload.OrderResponse;
 import com.tlc.group.seven.orderprocessingservice.order.repository.OrderRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
-import java.util.HashMap;
+import static com.tlc.group.seven.orderprocessingservice.constant.ServiceConstants.exchangeURL;
 
 @Service
 public class OrderService {
@@ -31,11 +27,11 @@ public class OrderService {
 //    public OrderService(OrderRepository repository) {
 //        this.repository = repository;
 //    }
+    private final String exchangeURL = ServiceConstants.exchangeURL;
+    private final String exchange2URL = ServiceConstants.exchange2URL;
+    WebClient webClient = WebClient.create(exchange2URL);
 
     public OrderResponse createOrder(Order order){
-        String exchangeURL = ServiceConstants.exchangeURL;
-        String exchange2URL = ServiceConstants.exchange2URL;
-        WebClient webClient = WebClient.create(exchangeURL);
         String response = webClient.post().uri("/order").body(Mono.just(order), Order.class).retrieve().bodyToMono(String.class).block();
         assert response != null;
         order.setOrderId(response.substring(1,response.length()-1));
@@ -49,5 +45,12 @@ public class OrderService {
                 order.getID(),order.getOrderId(),
                 order.getQuantity(),order.getProduct(),
                 order.getPrice(),order.getType());
+    }
+
+    public OrderResponse getOrderById(String orderId) {
+        String response = webClient.get().uri("/order/"+orderId).retrieve().bodyToMono(String.class).block();
+        System.out.println(response);
+        return null;
+
     }
 }
