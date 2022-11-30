@@ -28,7 +28,7 @@ server port 8083
           bin/zookeeper-server-start.sh config/zookeeper.properties
    2. Start the Kafka broker service
        #### Windows:
-             ./bin/kafka-server-start.bat ./config/server.properties
+             .\bin\kafka-server-start.bat .\config\server.properties
     
        #### Mac:
              bin/kafka-server-start.sh config/server.properties
