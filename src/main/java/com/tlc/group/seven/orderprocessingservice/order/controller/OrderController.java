@@ -16,12 +16,13 @@ import java.util.HashMap;
 @RestController
 @RequestMapping("/api/v1/order")
 public class OrderController {
+    @Autowired
     private OrderService orderService;
 
-    @Autowired
-    public OrderController(OrderService orderService) {
-        this.orderService = orderService;
-    }
+//    @Autowired
+//    public OrderController(OrderService orderService) {
+//        this.orderService = orderService;
+//    }
 
     @PostMapping
     public ResponseEntity<?> createOrder(@RequestBody Order order){

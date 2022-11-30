@@ -27,10 +27,10 @@ public class OrderService {
     @Autowired
     private OrderRepository repository;
 
-    @Autowired
-    public OrderService(OrderRepository repository) {
-        this.repository = repository;
-    }
+//    @Autowired
+//    public OrderService(OrderRepository repository) {
+//        this.repository = repository;
+//    }
 
     public OrderResponse createOrder(Order order){
         String exchangeURL = ServiceConstants.exchangeURL;
@@ -42,6 +42,7 @@ public class OrderService {
         UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         User user  = userRepository.getReferenceById(userDetails.getId());
         order.setUsers(user);
+        System.out.println(order);
         repository.save(order);
         System.out.println(user.getName());
         return new OrderResponse("00","order created successfully",

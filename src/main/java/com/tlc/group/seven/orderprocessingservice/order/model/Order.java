@@ -36,6 +36,22 @@ public class Order {
     @UpdateTimestamp
     private Date updatedAt;
 
+    @Override
+    public String toString() {
+        return "Order{" +
+                "iD=" + iD +
+                ", product='" + product + '\'' +
+                ", quantity=" + quantity +
+                ", price=" + price +
+                ", type='" + type + '\'' +
+                ", side='" + side + '\'' +
+                ", orderId='" + orderId + '\'' +
+                ", createdAt=" + createdAt +
+                ", updatedAt=" + updatedAt +
+                ", users=" + users +
+                '}';
+    }
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "users_id")
     private User users;
