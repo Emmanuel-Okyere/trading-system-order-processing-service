@@ -13,4 +13,12 @@ public class KafkaTopicConfig {
                 .partitions(3)
                 .build();
     }
+
+    @Bean
+    public NewTopic logDataTopic(){
+        return TopicBuilder
+                .name("log-data")
+                .partitions(3)
+                .build();
+    }
 }
