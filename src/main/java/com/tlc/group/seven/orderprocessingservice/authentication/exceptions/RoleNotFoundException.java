@@ -1,7 +1,10 @@
 package com.tlc.group.seven.orderprocessingservice.authentication.exceptions;
 
-public class RoleNotFoundException extends Exception{
-    public RoleNotFoundException (String message){
-        super(message);
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
+
+public class RoleNotFoundException extends ResponseStatusException {
+    public RoleNotFoundException (HttpStatus status, String message){
+        super(status,message);
     }
 }

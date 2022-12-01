@@ -11,6 +11,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 import javax.persistence.*;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.util.Date;
 @Data
@@ -20,14 +21,21 @@ public class Order {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long iD;
+    @NotBlank(message = "Product can not be empty")
+//    @Size(max = 50)
     private String product;
-
+//    @NotBlank(message = "Quantity can not be empty")
+    @NotNull
     private Integer quantity;
+//    @NotBlank(message = "Price can not be empty")
+    @NotNull
     private Double price;
 
     @NotBlank(message = "Type is required")
+    @Size(min = 2)
     private String type;
     @NotBlank(message = "Side needed")
+    @Size (min = 3)
     private String side;
     @Column
     private String orderId;
@@ -35,23 +43,6 @@ public class Order {
     private Date createdAt;
     @UpdateTimestamp
     private Date updatedAt;
-
-    @Override
-    public String toString() {
-        return "Order{" +
-                "iD=" + iD +
-                ", product='" + product + '\'' +
-                ", quantity=" + quantity +
-                ", price=" + price +
-                ", type='" + type + '\'' +
-                ", side='" + side + '\'' +
-                ", orderId='" + orderId + '\'' +
-                ", createdAt=" + createdAt +
-                ", updatedAt=" + updatedAt +
-                ", users=" + users +
-                '}';
-    }
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "users_id")
     private User users;
