@@ -9,10 +9,12 @@ import com.tlc.group.seven.orderprocessingservice.authentication.payload.request
 import com.tlc.group.seven.orderprocessingservice.authentication.payload.request.SignupRequest;
 import com.tlc.group.seven.orderprocessingservice.authentication.payload.response.JwtResponse;
 import com.tlc.group.seven.orderprocessingservice.authentication.payload.response.MessageResponse;
+import com.tlc.group.seven.orderprocessingservice.authentication.payload.response.UserCreationResponse;
 import com.tlc.group.seven.orderprocessingservice.authentication.repository.RoleRepository;
 import com.tlc.group.seven.orderprocessingservice.authentication.repository.UserRepository;
 import com.tlc.group.seven.orderprocessingservice.authentication.security.jwt.JwtUtils;
 import com.tlc.group.seven.orderprocessingservice.authentication.service.UserDetailsImpl;
+import com.tlc.group.seven.orderprocessingservice.constant.ServiceConstants;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -53,7 +55,7 @@ public class AuthController {
         String jwt = jwtUtils.generateJwtToken(authentication);
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
         List<String> roles = userDetails.getAuthorities().stream().map(GrantedAuthority::getAuthority).collect(Collectors.toList());
-        return ResponseEntity.ok(new JwtResponse(jwt, userDetails.getId(),userDetails.getName(),userDetails.getEmail(), roles,userDetails.getBalance()));
+        return ResponseEntity.ok(new JwtResponse(jwt, userDetails.getId(),userDetails.getName(),userDetails.getEmail(), roles,userDetails.getBalance(), ServiceConstants.successStatus));
     }
 
     @PostMapping("/register")
@@ -95,12 +97,7 @@ public class AuthController {
         }
         user.setRoles(roles);
         userRepository.save(user);
-        HashMap<String,String> userCreatedResponse = new HashMap<>();
-        userCreatedResponse.put("status", "success");
-        userCreatedResponse.put("message", "user created successfully");
-        userCreatedResponse.put("id", user.getID().toString());
-        userCreatedResponse.put("name", user.getName());
-        userCreatedResponse.put("email", user.getEmail());
-        return ResponseEntity.status(HttpStatus.CREATED).body(userCreatedResponse);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(new UserCreationResponse(user.getID(), user.getName(),user.getEmail(),ServiceConstants.successStatus, ServiceConstants.successUserCreation));
     }
 }
