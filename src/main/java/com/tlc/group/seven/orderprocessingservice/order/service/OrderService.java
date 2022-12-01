@@ -67,7 +67,6 @@ public class OrderService {
 
     public ResponseEntity getOrderById(String orderId) {
         try {
-            System.out.println("***********************" + orderId + "************");
             OrderExecution response = webClient
                     .get()
                     .uri("/order/" + orderId)
