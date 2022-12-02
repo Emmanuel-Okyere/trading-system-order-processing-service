@@ -19,13 +19,9 @@ import org.springframework.web.reactive.function.client.WebClientRequestExceptio
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Mono;
 
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
-
-import static com.tlc.group.seven.orderprocessingservice.constant.ServiceConstants.exchangeURL;
-import static com.tlc.group.seven.orderprocessingservice.constant.ServiceConstants.failureStatus;
 
 @Service
 public class OrderService {
@@ -34,11 +30,6 @@ public class OrderService {
     private UserRepository userRepository;
     @Autowired
     private OrderRepository orderRepository;
-
-    //    @Autowired
-//    public OrderService(OrderRepository repository) {
-//        this.repository = repository;
-//    }
     private final String exchangeURL = ServiceConstants.exchangeURL;
     private final String exchange2URL = ServiceConstants.exchange2URL;
     WebClient webClient = WebClient.create(exchangeURL);
@@ -116,10 +107,12 @@ public class OrderService {
     public ResponseEntity<?> getAllOrdersByUser() {
         UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         User user = userRepository.getReferenceById(userDetails.getId());
-        System.out.println("**********************************"+user.getEmail());
         List<Order> allByUsers_iD = orderRepository.findAllByusers_iD(userDetails.getId());
-        System.out.println(allByUsers_iD);
         return  ResponseEntity.status(HttpStatus.FOUND)
                 .body(allByUsers_iD);
+    }
+
+    public void validateOrderByUser(Order order){
+
     }
 }

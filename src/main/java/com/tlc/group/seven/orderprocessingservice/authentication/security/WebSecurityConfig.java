@@ -1,7 +1,7 @@
 package com.tlc.group.seven.orderprocessingservice.authentication.security;
 
-import com.tlc.group.seven.orderprocessingservice.authentication.security.jwt.AuthEntryPointJwt;
-import com.tlc.group.seven.orderprocessingservice.authentication.security.jwt.AuthTokenFilter;
+import com.tlc.group.seven.orderprocessingservice.authentication.security.jwt.AuthenticationEntryPointJwt;
+import com.tlc.group.seven.orderprocessingservice.authentication.security.jwt.AuthenticationTokenFilter;
 import com.tlc.group.seven.orderprocessingservice.authentication.service.UserDetailsServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -27,11 +27,11 @@ public class WebSecurityConfig  {
     UserDetailsServiceImpl userDetailsService;
 
     @Autowired
-    private AuthEntryPointJwt unauthorizedHandler;
+    private AuthenticationEntryPointJwt unauthorizedHandler;
 
     @Bean
-    public AuthTokenFilter authenticationJwtTokenFilter() {
-        return new AuthTokenFilter();
+    public AuthenticationTokenFilter authenticationJwtTokenFilter() {
+        return new AuthenticationTokenFilter();
     }
 
 //  @Override

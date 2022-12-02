@@ -1,5 +1,4 @@
-package com.tlc.group.seven.orderprocessingservice.authentication.controller;
-
+package com.tlc.group.seven.orderprocessingservice.authentication.service;
 
 import com.tlc.group.seven.orderprocessingservice.authentication.exceptions.RoleNotFoundException;
 import com.tlc.group.seven.orderprocessingservice.authentication.model.ERole;
@@ -8,12 +7,10 @@ import com.tlc.group.seven.orderprocessingservice.authentication.model.User;
 import com.tlc.group.seven.orderprocessingservice.authentication.payload.request.LoginRequest;
 import com.tlc.group.seven.orderprocessingservice.authentication.payload.request.SignupRequest;
 import com.tlc.group.seven.orderprocessingservice.authentication.payload.response.JwtResponse;
-import com.tlc.group.seven.orderprocessingservice.authentication.payload.response.MessageResponse;
 import com.tlc.group.seven.orderprocessingservice.authentication.payload.response.UserCreationResponse;
 import com.tlc.group.seven.orderprocessingservice.authentication.repository.RoleRepository;
 import com.tlc.group.seven.orderprocessingservice.authentication.repository.UserRepository;
 import com.tlc.group.seven.orderprocessingservice.authentication.security.jwt.JwtUtils;
-import com.tlc.group.seven.orderprocessingservice.authentication.service.UserDetailsImpl;
 import com.tlc.group.seven.orderprocessingservice.constant.ServiceConstants;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -24,19 +21,17 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.stereotype.Service;
 
-import javax.validation.Valid;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-@CrossOrigin(origins = "*",maxAge = 3600)
-@RestController
-@RequestMapping("/api/v1/auth")
-public class AuthController {
+
+@Service
+public class AuthenticationService {
     @Autowired
     AuthenticationManager authenticationManager;
     @Autowired
@@ -48,8 +43,7 @@ public class AuthController {
     @Autowired
     JwtUtils jwtUtils;
 
-    @PostMapping("/login")
-    public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginRequest loginRequest){
+    public ResponseEntity<?> authenticateUserLogin(LoginRequest loginRequest){
         Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(loginRequest.getEmail(),loginRequest.getPassword()));
         SecurityContextHolder.getContext().setAuthentication(authentication);
         String jwt = jwtUtils.generateJwtToken(authentication);
@@ -58,8 +52,7 @@ public class AuthController {
         return ResponseEntity.ok(new JwtResponse(jwt, userDetails.getId(),userDetails.getName(),userDetails.getEmail(), roles,userDetails.getBalance(), ServiceConstants.successStatus));
     }
 
-    @PostMapping("/register")
-    public ResponseEntity<?> registerUser(@Valid @RequestBody SignupRequest signUpRequest) throws RoleNotFoundException {
+    public ResponseEntity<?> registerUser(SignupRequest signUpRequest) throws RoleNotFoundException {
         if (userRepository.existsByEmail(signUpRequest.getEmail())) {
             HashMap<String,String> hashResponse = new HashMap<>();
             hashResponse.put("status","failure");
@@ -99,5 +92,6 @@ public class AuthController {
         userRepository.save(user);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(new UserCreationResponse(user.getID(), user.getName(),user.getEmail(),ServiceConstants.successStatus, ServiceConstants.successUserCreation));
+
     }
 }

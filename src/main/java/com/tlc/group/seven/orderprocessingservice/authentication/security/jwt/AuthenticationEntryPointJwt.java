@@ -15,8 +15,8 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 @Component
-public class AuthEntryPointJwt implements AuthenticationEntryPoint {
-    Logger logger = LoggerFactory.getLogger(AuthEntryPointJwt.class);
+public class AuthenticationEntryPointJwt implements AuthenticationEntryPoint {
+    Logger logger = LoggerFactory.getLogger(AuthenticationEntryPointJwt.class);
 
     @Override
     public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException) throws IOException, ServletException {
