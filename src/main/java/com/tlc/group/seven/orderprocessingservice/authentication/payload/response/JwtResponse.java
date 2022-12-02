@@ -6,8 +6,6 @@ import java.util.List;
 
 @Data
 public class JwtResponse {
-    private String accessToken;
-//    private String type = "Bearer";
     private Long id;
     private String name;
     private String email;
@@ -16,8 +14,7 @@ public class JwtResponse {
     private String status;
     private List<String> roles;
 
-    public JwtResponse(String accessToken, Long id, String name, String email, List<String> roles, double balance, String status) {
-        this.accessToken = accessToken;
+    public JwtResponse(Long id, String name, String email, List<String> roles, double balance, String status) {
         this.id = id;
         this.name = name;
         this.email = email;

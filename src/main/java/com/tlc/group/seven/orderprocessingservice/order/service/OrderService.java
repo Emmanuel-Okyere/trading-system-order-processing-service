@@ -21,6 +21,7 @@ import reactor.core.publisher.Mono;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -53,7 +54,8 @@ public class OrderService {
                         order.getID(), order.getOrderId(),
                         order.getQuantity(), order.getProduct(),
                         order.getPrice(), order.getType());
-                return ResponseEntity.status(HttpStatus.CREATED).body(orderResponse);
+                Map <?,?> statusResponse = Map.of("status", ServiceConstants.successStatus,"message",ServiceConstants.orderCreationSuccess,"data",orderResponse);
+                return ResponseEntity.status(HttpStatus.CREATED).body(statusResponse);
             }
         } catch (WebClientResponseException | WebClientRequestException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -108,8 +110,9 @@ public class OrderService {
         UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         User user = userRepository.getReferenceById(userDetails.getId());
         List<Order> allByUsers_iD = orderRepository.findAllByusers_iD(userDetails.getId());
+        Map<?,?> response = Map.of("status",ServiceConstants.successStatus,"message",ServiceConstants.ordersGettingSuccess, "data",allByUsers_iD);
         return  ResponseEntity.status(HttpStatus.FOUND)
-                .body(allByUsers_iD);
+                .body(response);
     }
 
     public void validateOrderByUser(Order order){

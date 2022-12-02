@@ -23,10 +23,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 
@@ -49,14 +46,19 @@ public class AuthenticationService {
         String jwt = jwtUtils.generateJwtToken(authentication);
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
         List<String> roles = userDetails.getAuthorities().stream().map(GrantedAuthority::getAuthority).collect(Collectors.toList());
-        return ResponseEntity.ok(new JwtResponse(jwt, userDetails.getId(),userDetails.getName(),userDetails.getEmail(), roles,userDetails.getBalance(), ServiceConstants.successStatus));
+        Map<?, ?> response = Map
+                .of("status",ServiceConstants.successStatus,
+                        "message",ServiceConstants.userLoginSuccess,
+                        "accessToken",jwt,
+                        "data", new JwtResponse(userDetails.getId(),userDetails.getName(),userDetails.getEmail(),
+                                roles,userDetails.getBalance(), ServiceConstants.successStatus));
+        return ResponseEntity.ok(response);
     }
 
     public ResponseEntity<?> registerUser(SignupRequest signUpRequest) throws RoleNotFoundException {
         if (userRepository.existsByEmail(signUpRequest.getEmail())) {
-            HashMap<String,String> hashResponse = new HashMap<>();
-            hashResponse.put("status","failure");
-            hashResponse.put("message","email already taken");
+            Map<String,String> hashResponse = Map
+                    .of("status",ServiceConstants.failureStatus,"message",ServiceConstants.emailAlreadyTaken);
             return ResponseEntity
                     .badRequest()
                     .body(hashResponse);
@@ -90,8 +92,9 @@ public class AuthenticationService {
         }
         user.setRoles(roles);
         userRepository.save(user);
+        Map<?, ?> response = Map.of("status",ServiceConstants.successStatus, "message",ServiceConstants.successUserCreation,"data", new UserCreationResponse(user.getID(), user.getName(),user.getEmail()));
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(new UserCreationResponse(user.getID(), user.getName(),user.getEmail(),ServiceConstants.successStatus, ServiceConstants.successUserCreation));
+                .body(response);
 
     }
 }

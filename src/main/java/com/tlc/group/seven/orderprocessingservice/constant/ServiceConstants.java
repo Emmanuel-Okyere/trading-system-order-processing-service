@@ -16,4 +16,9 @@ public interface ServiceConstants {
      String userNotFoundFailure = "Can not set user authentication: User not found";
 
      String orderGettingError= "Order can not be found";
+
+     String nameAlreadyTaken = "name already taken";
+     String emailAlreadyTaken = "email already taken";
+     String userLoginSuccess = "login successful";
+     String ordersGettingSuccess = "order fetch successful";
 }
