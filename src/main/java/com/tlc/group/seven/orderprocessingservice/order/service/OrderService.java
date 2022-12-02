@@ -15,10 +15,17 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientRequestException;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Mono;
 
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Optional;
+
 import static com.tlc.group.seven.orderprocessingservice.constant.ServiceConstants.exchangeURL;
+import static com.tlc.group.seven.orderprocessingservice.constant.ServiceConstants.failureStatus;
 
 @Service
 public class OrderService {
@@ -26,9 +33,9 @@ public class OrderService {
     @Autowired
     private UserRepository userRepository;
     @Autowired
-    private OrderRepository repository;
+    private OrderRepository orderRepository;
 
-//    @Autowired
+    //    @Autowired
 //    public OrderService(OrderRepository repository) {
 //        this.repository = repository;
 //    }
@@ -36,8 +43,8 @@ public class OrderService {
     private final String exchange2URL = ServiceConstants.exchange2URL;
     WebClient webClient = WebClient.create(exchangeURL);
 
-    public OrderResponse createOrder(Order order){
-        try{
+    public ResponseEntity<?> createOrder(Order order) {
+        try {
             String response = webClient
                     .post()
                     .uri("/order")
@@ -45,46 +52,74 @@ public class OrderService {
                     .retrieve()
                     .bodyToMono(String.class)
                     .block();
-            if (response !=null){
-                order.setOrderId(response.substring(1,response.length()-1));
+            if (response != null) {
+                order.setOrderId(response.substring(1, response.length() - 1));
                 UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-                User user  = userRepository.getReferenceById(userDetails.getId());
+                User user = userRepository.getReferenceById(userDetails.getId());
                 order.setUsers(user);
-                System.out.println(order);
-//                repository.save(order);
-                System.out.println(user.getName());
-                return new OrderResponse(ServiceConstants.successStatus,ServiceConstants.orderCreationSuccess,
-                        order.getID(),order.getOrderId(),
-                        order.getQuantity(),order.getProduct(),
-                        order.getPrice(),order.getType());
+                orderRepository.save(order);
+                OrderResponse orderResponse = new OrderResponse(ServiceConstants.successStatus, ServiceConstants.orderCreationSuccess,
+                        order.getID(), order.getOrderId(),
+                        order.getQuantity(), order.getProduct(),
+                        order.getPrice(), order.getType());
+                return ResponseEntity.status(HttpStatus.CREATED).body(orderResponse);
             }
-        }catch (WebClientResponseException e){
-            return null;
+        } catch (WebClientResponseException | WebClientRequestException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ErrorResponse.builder()
+                            .status(ServiceConstants.failureStatus)
+                            .message(ServiceConstants.UnsuccessfullOrderCreation).build());
         }
-
-        return null;
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(ErrorResponse.builder()
+                        .status(ServiceConstants.failureStatus)
+                        .message(ServiceConstants.UnsuccessfullOrderCreation).build());
     }
 
-    public ResponseEntity getOrderById(String orderId) {
-        try {
-            OrderExecution response = webClient
-                    .get()
-                    .uri("/order/" + orderId)
-                    .retrieve()
-                    .bodyToMono(OrderExecution.class)
-                    .block();
-            return ResponseEntity
-                    .status(HttpStatus.OK)
-                    .body(response);
-        }catch (WebClientResponseException e){
-            return ResponseEntity
-                    .status(HttpStatus.BAD_REQUEST)
-                    .body(ErrorResponse
-                            .builder()
-                    .message(e.getMessage())
-                    .status(e.getStatusCode()
-                            .name())
-                            .build());
+    public ResponseEntity<?> getOrderById(String orderId) {
+        Optional<Order> order = orderRepository.findOrderByOrderId(orderId);
+        if (order.isPresent()) {
+            try {
+
+                OrderExecution response = webClient
+                        .get()
+                        .uri("/order/" + orderId)
+                        .retrieve()
+                        .bodyToMono(OrderExecution.class)
+                        .block();
+                if (response !=null) {
+                    response.setCreatedAt(order.get().getCreatedAt());
+                    response.setUpdatedAt(new Date());
+                    return ResponseEntity
+                            .status(HttpStatus.OK)
+                            .body(response);
+                }
+            } catch (WebClientResponseException | WebClientRequestException e) {
+                return ResponseEntity
+                        .status(HttpStatus.NOT_FOUND)
+                        .body(ErrorResponse
+                                .builder()
+                                .message(ServiceConstants.orderGettingError)
+                                .status(ServiceConstants.failureStatus)
+                                .build());
+            }
         }
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(ErrorResponse
+                        .builder()
+                        .message(ServiceConstants.orderGettingError)
+                        .status(ServiceConstants.failureStatus)
+                        .build());
+    }
+
+    public ResponseEntity<?> getAllOrdersByUser() {
+        UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        User user = userRepository.getReferenceById(userDetails.getId());
+        System.out.println("**********************************"+user.getEmail());
+        List<Order> allByUsers_iD = orderRepository.findAllByusers_iD(userDetails.getId());
+        System.out.println(allByUsers_iD);
+        return  ResponseEntity.status(HttpStatus.FOUND)
+                .body(allByUsers_iD);
     }
 }

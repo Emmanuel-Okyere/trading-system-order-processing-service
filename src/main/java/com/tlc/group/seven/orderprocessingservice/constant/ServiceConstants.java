@@ -8,7 +8,12 @@ public interface ServiceConstants {
      String failureStatus = "01";
      String successUserCreation = "user created successfully";
      String orderCreationSuccess = "order created successfully";
+     String orderCreationFailure = "order creation failed";
      String UnsuccessfullOrderCreation = "order creation not successful";
 
      String roleNotFoundFailure = "Error: Role is not found.";
+
+     String userNotFoundFailure = "Can not set user authentication: User not found";
+
+     String orderGettingError= "Order can not be found";
 }

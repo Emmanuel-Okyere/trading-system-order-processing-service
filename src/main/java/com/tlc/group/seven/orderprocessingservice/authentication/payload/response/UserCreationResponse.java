@@ -9,7 +9,7 @@ public class UserCreationResponse {
     private String name;
     private String email;
 
-    private Double balance;
+    private double balance;
     private String status;
     private String message;
 

@@ -1,5 +1,6 @@
 package com.tlc.group.seven.orderprocessingservice.order.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.tlc.group.seven.orderprocessingservice.authentication.model.User;
 import lombok.Data;
@@ -34,7 +35,7 @@ public class Order {
     @NotBlank(message = "Type is required")
     @Size(min = 2)
     private String type;
-    @NotBlank(message = "Side needed")
+    @NotBlank(message = "Side must not be null")
     @Size (min = 3)
     private String side;
     @Column
@@ -43,6 +44,8 @@ public class Order {
     private Date createdAt;
     @UpdateTimestamp
     private Date updatedAt;
+
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "users_id")
     private User users;

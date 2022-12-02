@@ -1,6 +1,7 @@
 package com.tlc.group.seven.orderprocessingservice.order.model;
 
 import lombok.Data;
+import lombok.Value;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -23,13 +24,14 @@ public class OrderExecution {
     private String orderType;
     @Size (min = 3)
     private String side;
-    private Integer commulativeQuantity;
+    @NotNull
+    private int commulativeQuantity;
+    @NotNull
     private Double cumulatitivePrice;
-    @Column
+    @NotBlank
     private String orderID;
     private List<Execution> executions;
-    @CreationTimestamp
     private Date createdAt;
-    @UpdateTimestamp
+
     private Date updatedAt;
 }
