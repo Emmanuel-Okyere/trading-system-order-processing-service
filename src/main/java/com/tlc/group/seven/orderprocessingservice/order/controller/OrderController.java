@@ -27,8 +27,4 @@ public class OrderController {
         return orderService.getOrderById(orderId);
     }
 
-    @GetMapping
-    public ResponseEntity<?> getAllOrderByAUser(){
-        return orderService.getAllOrdersByUser();
-    }
 }

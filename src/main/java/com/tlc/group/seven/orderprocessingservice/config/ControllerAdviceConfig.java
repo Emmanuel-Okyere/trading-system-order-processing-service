@@ -26,7 +26,7 @@ public class ControllerAdviceConfig {
                 .collect(Collectors.toMap(FieldError::getField, FieldError::getDefaultMessage));
 
         Map<String, ?> errors = Map.
-                of("errors", body,"status",ServiceConstants.failureStatus, "message",ServiceConstants.orderCreationFailure);
+                of("errors", body,"status",ServiceConstants.failureStatus, "message",ServiceConstants.creationFailure);
         return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
     }
     @ExceptionHandler(ResponseStatusException.class)

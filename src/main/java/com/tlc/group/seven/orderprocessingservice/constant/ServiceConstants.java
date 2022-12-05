@@ -21,4 +21,9 @@ public interface ServiceConstants {
      String emailAlreadyTaken = "email already taken";
      String userLoginSuccess = "login successful";
      String ordersGettingSuccess = "order fetch successful";
+     String portfolioCreationSuccess = "portfolio creation success";
+     String portfolioCreationFailure = "portfolio creation failure";
+     String creationFailure = "creation failure";
+     String portfolioNameTaken = "name already taken";
+     String portfolioGettingSuccess = "portfolios getting success";
 }

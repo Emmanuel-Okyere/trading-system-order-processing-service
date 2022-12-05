@@ -1,16 +1,12 @@
 package com.tlc.group.seven.orderprocessingservice.order.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.tlc.group.seven.orderprocessingservice.authentication.model.User;
+import com.tlc.group.seven.orderprocessingservice.portfolio.model.Portfolio;
 import lombok.Data;
-import lombok.Getter;
-import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import javax.persistence.*;
-import javax.validation.constraints.Min;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
@@ -23,12 +19,9 @@ public class Order {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long iD;
     @NotBlank(message = "Product can not be empty")
-//    @Size(max = 50)
     private String product;
-//    @NotBlank(message = "Quantity can not be empty")
     @NotNull
     private Integer quantity;
-//    @NotBlank(message = "Price can not be empty")
     @NotNull
     private Double price;
 
@@ -46,11 +39,16 @@ public class Order {
     private Date updatedAt;
 
     @JsonIgnore
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "users_id")
-    private User users;
+    @Transient
+    @NotNull
+    private Long portfolioId;
 
-    public void setUser(User user){
-        this.users= user;
+    @JsonIgnore
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "portfolio_id")
+    private Portfolio portfolio;
+
+    public void setPortfolio(Portfolio portfolio){
+        this.portfolio= portfolio;
     }
 }

@@ -9,6 +9,8 @@ import com.tlc.group.seven.orderprocessingservice.order.model.OrderExecution;
 import com.tlc.group.seven.orderprocessingservice.order.payload.ErrorResponse;
 import com.tlc.group.seven.orderprocessingservice.order.payload.OrderResponse;
 import com.tlc.group.seven.orderprocessingservice.order.repository.OrderRepository;
+import com.tlc.group.seven.orderprocessingservice.portfolio.model.Portfolio;
+import com.tlc.group.seven.orderprocessingservice.portfolio.repository.PortfolioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -31,6 +33,8 @@ public class OrderService {
     private UserRepository userRepository;
     @Autowired
     private OrderRepository orderRepository;
+    @Autowired
+    private PortfolioRepository portfolioRepository;
     private final String exchangeURL = ServiceConstants.exchangeURL;
     private final String exchange2URL = ServiceConstants.exchange2URL;
     WebClient webClient = WebClient.create(exchangeURL);
@@ -46,16 +50,18 @@ public class OrderService {
                     .block();
             if (response != null) {
                 order.setOrderId(response.substring(1, response.length() - 1));
-                UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-                User user = userRepository.getReferenceById(userDetails.getId());
-                order.setUsers(user);
-                orderRepository.save(order);
-                OrderResponse orderResponse = new OrderResponse(ServiceConstants.successStatus, ServiceConstants.orderCreationSuccess,
-                        order.getID(), order.getOrderId(),
-                        order.getQuantity(), order.getProduct(),
-                        order.getPrice(), order.getType());
-                Map <?,?> statusResponse = Map.of("status", ServiceConstants.successStatus,"message",ServiceConstants.orderCreationSuccess,"data",orderResponse);
-                return ResponseEntity.status(HttpStatus.CREATED).body(statusResponse);
+                Optional<Portfolio> portfolio = portfolioRepository.findById(order.getPortfolioId());
+                if(portfolio.isPresent()){
+                    order.setPortfolio(portfolio.get());
+                    orderRepository.save(order);
+                    OrderResponse orderResponse = new OrderResponse(
+                            order.getID(), order.getOrderId(),
+                            order.getQuantity(), order.getProduct(),
+                            order.getPrice(), order.getType());
+                    Map <?,?> statusResponse = Map.of("status", ServiceConstants.successStatus,"message",ServiceConstants.orderCreationSuccess,"data",orderResponse);
+                    return ResponseEntity.status(HttpStatus.CREATED).body(statusResponse);
+                }
+
             }
         } catch (WebClientResponseException | WebClientRequestException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -104,15 +110,6 @@ public class OrderService {
                         .message(ServiceConstants.orderGettingError)
                         .status(ServiceConstants.failureStatus)
                         .build());
-    }
-
-    public ResponseEntity<?> getAllOrdersByUser() {
-        UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        User user = userRepository.getReferenceById(userDetails.getId());
-        List<Order> allByUsers_iD = orderRepository.findAllByusers_iD(userDetails.getId());
-        Map<?,?> response = Map.of("status",ServiceConstants.successStatus,"message",ServiceConstants.ordersGettingSuccess, "data",allByUsers_iD);
-        return  ResponseEntity.status(HttpStatus.FOUND)
-                .body(response);
     }
 
     public void validateOrderByUser(Order order){
