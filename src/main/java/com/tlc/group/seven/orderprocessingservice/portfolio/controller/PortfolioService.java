@@ -66,4 +66,17 @@ public class PortfolioService {
         return  ResponseEntity.status(HttpStatus.FOUND)
                 .body(response);
     }
+
+    public ResponseEntity<?> deletePortfolio(Long portofolioId) {
+        Optional<Portfolio> portfolio = portfolioRepository.findById(portofolioId);
+        if(portfolio.isPresent()){
+            portfolioRepository.delete(portfolio.get());
+            Map<?,?> response = Map.of("status",ServiceConstants.successStatus,"message",ServiceConstants.portfolioDeleteSuccess);
+            return ResponseEntity.status(HttpStatus.NO_CONTENT).body(response);
+        }
+        else {
+            Map<?,?> response = Map.of("status",ServiceConstants.failureStatus,"message",ServiceConstants.portfolioDeleteFailure);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        }
+    }
 }

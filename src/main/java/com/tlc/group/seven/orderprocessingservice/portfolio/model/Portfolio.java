@@ -3,6 +3,8 @@ package com.tlc.group.seven.orderprocessingservice.portfolio.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.tlc.group.seven.orderprocessingservice.authentication.model.User;
 import lombok.Data;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;

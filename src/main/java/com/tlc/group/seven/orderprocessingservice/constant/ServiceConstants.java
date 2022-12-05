@@ -26,4 +26,6 @@ public interface ServiceConstants {
      String creationFailure = "creation failure";
      String portfolioNameTaken = "name already taken";
      String portfolioGettingSuccess = "portfolios getting success";
+     String portfolioDeleteSuccess = "portfolios deleting was successful";
+     String portfolioDeleteFailure = "portfolios deleting was unsuccessful";
 }

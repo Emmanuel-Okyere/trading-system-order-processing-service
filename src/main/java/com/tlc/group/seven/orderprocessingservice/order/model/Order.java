@@ -1,9 +1,12 @@
 package com.tlc.group.seven.orderprocessingservice.order.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.tlc.group.seven.orderprocessingservice.portfolio.model.Portfolio;
 import lombok.Data;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import javax.persistence.*;
@@ -37,14 +40,13 @@ public class Order {
     private Date createdAt;
     @UpdateTimestamp
     private Date updatedAt;
-
-    @JsonIgnore
-    @Transient
+    @JsonIgnoreProperties
     @NotNull
+    @Transient
     private Long portfolioId;
 
     @JsonIgnore
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "portfolio_id")
     private Portfolio portfolio;
 
