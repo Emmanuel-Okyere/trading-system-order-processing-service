@@ -10,6 +10,8 @@ public interface ServiceConstants {
      String orderCreationSuccess = "order created successfully";
      String orderCreationFailure = "order creation failed";
      String UnsuccessfullOrderCreation = "order creation not successful";
+     String insufficientBalance = "insufficient balance to make the order";
+     String portfolioCannotMakeOrder = "this portfolio can not make the sell order";
 
      String roleNotFoundFailure = "Error: Role is not found.";
 

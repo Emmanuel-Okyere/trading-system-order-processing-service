@@ -40,34 +40,24 @@ public class OrderService {
     WebClient webClient = WebClient.create(exchangeURL);
 
     public ResponseEntity<?> createOrder(Order order) {
-        try {
-            String response = webClient
-                    .post()
-                    .uri("/order")
-                    .body(Mono.just(order), Order.class)
-                    .retrieve()
-                    .bodyToMono(String.class)
-                    .block();
-            if (response != null) {
-                order.setOrderId(response.substring(1, response.length() - 1));
-                Optional<Portfolio> portfolio = portfolioRepository.findById(order.getPortfolioId());
-                if(portfolio.isPresent()){
-                    order.setPortfolio(portfolio.get());
-                    orderRepository.save(order);
-                    OrderResponse orderResponse = new OrderResponse(
-                            order.getID(), order.getOrderId(),
-                            order.getQuantity(), order.getProduct(),
-                            order.getPrice(), order.getType());
-                    Map <?,?> statusResponse = Map.of("status", ServiceConstants.successStatus,"message",ServiceConstants.orderCreationSuccess,"data",orderResponse);
-                    return ResponseEntity.status(HttpStatus.CREATED).body(statusResponse);
+        switch (order.getSide().toLowerCase()){
+            case "sell" :
+                if(validateSellOrderAgainstUserPortfolio(order)){
+                    return makeOrderToExhange(order);
                 }
-
+                                else return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(ErrorResponse.builder()
+                                .status(ServiceConstants.failureStatus)
+                                .message(ServiceConstants.portfolioCannotMakeOrder).build());
+            case "buy" :{
+                if(validateBuyOrderAgainstUserPortfolio(order)){
+                    return makeOrderToExhange(order);
+                }
+                else return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(ErrorResponse.builder()
+                                .status(ServiceConstants.failureStatus)
+                                .message(ServiceConstants.insufficientBalance).build());
             }
-        } catch (WebClientResponseException | WebClientRequestException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(ErrorResponse.builder()
-                            .status(ServiceConstants.failureStatus)
-                            .message(ServiceConstants.UnsuccessfullOrderCreation).build());
         }
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(ErrorResponse.builder()
@@ -112,7 +102,75 @@ public class OrderService {
                         .build());
     }
 
-    public void validateOrderByUser(Order order){
+    public void validateSellOrderWithPortfolio(Order order){
+        UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        User user = userRepository.getReferenceById(userDetails.getId());
+    }
 
+    public Boolean validateSellOrderAgainstUserPortfolio(Order order){
+        UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        User user = userRepository.getReferenceById(userDetails.getId());
+        Optional<Portfolio> usersPortfolio = portfolioRepository.findById(order.getPortfolioId());
+        if(usersPortfolio.isPresent()){
+            List<Order> userOrders = orderRepository.findOrderByPortfolio_iD(order.getPortfolioId());
+            for(Order userOrder :userOrders){
+                if(userOrder.getProduct().equals(order.getProduct()) ){ //user order.getStatus==closed so see that they own it.
+                    return true;
+                }
+            }
+            return false;
+        }
+        return false;
+    }
+
+    public Boolean validateBuyOrderAgainstUserPortfolio(Order order){
+        UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        User user = userRepository.getReferenceById(userDetails.getId());
+        Optional<Portfolio> usersPortfolio = portfolioRepository.findById(order.getPortfolioId());
+        if(usersPortfolio.isPresent()){
+            if(order.getPrice()*order.getQuantity()<= usersPortfolio.get().getBalance()){
+                System.out.println("************Can not make beacuse your money small****************");
+                return true;
+            }
+            System.out.println("************Can not make bessssssacuse your money small****************");
+            return false;
+        }
+        return false;
+    }
+    
+    public ResponseEntity<?> makeOrderToExhange(Order order){
+        try {
+            String response = webClient
+                    .post()
+                    .uri("/order")
+                    .body(Mono.just(order), Order.class)
+                    .retrieve()
+                    .bodyToMono(String.class)
+                    .block();
+            if (response != null) {
+                order.setOrderId(response.substring(1, response.length() - 1));
+                Optional<Portfolio> portfolio = portfolioRepository.findById(order.getPortfolioId());
+                if(portfolio.isPresent()){
+                    order.setPortfolio(portfolio.get());
+                    orderRepository.save(order);
+                    OrderResponse orderResponse = new OrderResponse(
+                            order.getID(), order.getOrderId(),
+                            order.getQuantity(), order.getProduct(),
+                            order.getPrice(), order.getType());
+                    Map <?,?> statusResponse = Map.of("status", ServiceConstants.successStatus,"message",ServiceConstants.orderCreationSuccess,"data",orderResponse);
+                    return ResponseEntity.status(HttpStatus.CREATED).body(statusResponse);
+                }
+
+            }
+        } catch (WebClientResponseException | WebClientRequestException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ErrorResponse.builder()
+                            .status(ServiceConstants.failureStatus)
+                            .message(ServiceConstants.UnsuccessfullOrderCreation).build());
+        }
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(ErrorResponse.builder()
+                        .status(ServiceConstants.failureStatus)
+                        .message(ServiceConstants.UnsuccessfullOrderCreation).build());
     }
 }
