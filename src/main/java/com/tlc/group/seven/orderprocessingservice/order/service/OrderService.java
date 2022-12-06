@@ -4,6 +4,8 @@ import com.tlc.group.seven.orderprocessingservice.authentication.model.User;
 import com.tlc.group.seven.orderprocessingservice.authentication.repository.UserRepository;
 import com.tlc.group.seven.orderprocessingservice.authentication.service.UserDetailsImpl;
 import com.tlc.group.seven.orderprocessingservice.constant.ServiceConstants;
+import com.tlc.group.seven.orderprocessingservice.kafka.consumer.KafkaConsumer;
+import com.tlc.group.seven.orderprocessingservice.order.model.MarketData;
 import com.tlc.group.seven.orderprocessingservice.order.model.Order;
 import com.tlc.group.seven.orderprocessingservice.order.model.OrderExecution;
 import com.tlc.group.seven.orderprocessingservice.order.payload.ErrorResponse;
@@ -35,6 +37,8 @@ public class OrderService {
     private OrderRepository orderRepository;
     @Autowired
     private PortfolioRepository portfolioRepository;
+    @Autowired
+    private KafkaConsumer kafkaConsumer;
     private final String exchangeURL = ServiceConstants.exchangeURL;
     private final String exchange2URL = ServiceConstants.exchange2URL;
     WebClient webClient = WebClient.create(exchangeURL);
@@ -42,16 +46,16 @@ public class OrderService {
     public ResponseEntity<?> createOrder(Order order) {
         switch (order.getSide().toLowerCase()){
             case "sell" :
-                if(validateSellOrderAgainstUserPortfolio(order)){
-                    return makeOrderToExhange(order);
+                if(validateSellOrderAgainstUserPortfolio(order) && validateSellAgainstMarketData(order)){
+                    return makeOrderToExchange(order);
                 }
                                 else return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                         .body(ErrorResponse.builder()
                                 .status(ServiceConstants.failureStatus)
                                 .message(ServiceConstants.portfolioCannotMakeOrder).build());
             case "buy" :{
-                if(validateBuyOrderAgainstUserPortfolio(order)){
-                    return makeOrderToExhange(order);
+                if(validateBuyOrderAgainstUserPortfolio(order) && validateBuyAgainstMarketData(order)){
+                    return makeOrderToExchange(order);
                 }
                 else return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                         .body(ErrorResponse.builder()
@@ -138,7 +142,7 @@ public class OrderService {
         return false;
     }
     
-    public ResponseEntity<?> makeOrderToExhange(Order order){
+    public ResponseEntity<?> makeOrderToExchange(Order order){
         try {
             String response = webClient
                     .post()
@@ -172,5 +176,31 @@ public class OrderService {
                 .body(ErrorResponse.builder()
                         .status(ServiceConstants.failureStatus)
                         .message(ServiceConstants.UnsuccessfullOrderCreation).build());
+    }
+
+    public Boolean validateBuyAgainstMarketData(Order order){
+        List <MarketData> marketData=  kafkaConsumer.payload;
+        for (MarketData markData: marketData){
+            if(markData.getTICKER().equals(order.getProduct())){
+                double differenceInPrice = markData.getASK_PRICE()-order.getPrice();
+                if((differenceInPrice >0.5 && differenceInPrice <1.0) && (markData.getSELL_LIMIT()>=order.getQuantity())){
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    public Boolean validateSellAgainstMarketData(Order order){
+        List <MarketData> marketData=  kafkaConsumer.payload;
+        for (MarketData markData: marketData){
+            if(markData.getTICKER().equals(order.getProduct())){
+                double differenceInPrice = markData.getBID_PRICE()-order.getPrice();
+                if((differenceInPrice >0.5 && differenceInPrice <1.0) && (markData.getBUY_LIMIT()>=order.getQuantity())){
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 }

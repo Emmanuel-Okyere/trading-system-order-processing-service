@@ -35,7 +35,7 @@ public class PortfolioService {
             UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
             User user = userRepository.getReferenceById(userDetails.getId());
             portfolio.setUsers(user);
-            portfolio.setBalance(0.00);
+            portfolio.setBalance(50.00);
             portfolioRepository.save(portfolio);
             Map<?,?> statusResponse = Map.of("status", ServiceConstants.successStatus,"message",ServiceConstants.portfolioCreationSuccess,"data", portfolio);
             return ResponseEntity.status(HttpStatus.CREATED).body(statusResponse);
