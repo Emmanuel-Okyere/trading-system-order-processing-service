@@ -57,6 +57,7 @@ public class AuthenticationService {
         if(portfolio.isEmpty()){
             Portfolio defaultPortfolio = new Portfolio(ServiceConstants.defaultPortfolio);
             defaultPortfolio.setUsers(user);
+            defaultPortfolio.setQuantity(0);
             portfolioRepository.save(defaultPortfolio);
         }
         List<String> roles = userDetails.getAuthorities().stream().map(GrantedAuthority::getAuthority).collect(Collectors.toList());
