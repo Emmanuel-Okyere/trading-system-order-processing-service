@@ -16,6 +16,8 @@ public class KafkaConsumer {
     @KafkaListener(topics = "market-data", groupId = "market-data-group")
     public void consumeFromKafka(List<MarketData> data){
         payload = data;
+
         LOGGER.info(String.format("Data received from Kafka -> %s", data));
+        LOGGER.info(String.format("Data received from Kafka :: Class -> %s", data.getClass()));
     }
 }

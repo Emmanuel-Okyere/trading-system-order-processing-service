@@ -1,5 +1,8 @@
 package com.tlc.group.seven.orderprocessingservice.order.service;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.Gson;
 import com.tlc.group.seven.orderprocessingservice.authentication.model.User;
 import com.tlc.group.seven.orderprocessingservice.authentication.repository.UserRepository;
 import com.tlc.group.seven.orderprocessingservice.authentication.service.UserDetailsImpl;
@@ -27,6 +30,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+
+import static java.util.stream.Collectors.toList;
 
 @Service
 public class OrderService {
@@ -179,16 +184,20 @@ public class OrderService {
     }
 
     public Boolean validateBuyAgainstMarketData(Order order){
-        List <MarketData> marketData=  kafkaConsumer.payload;
-        for (MarketData markData: marketData){
-            if(markData.getTICKER().equals(order.getProduct())){
-                double differenceInPrice = markData.getASK_PRICE()-order.getPrice();
-                if((differenceInPrice >0.5 && differenceInPrice <1.0) && (markData.getSELL_LIMIT()>=order.getQuantity())){
+        ObjectMapper mapper = new ObjectMapper();
+        List<MarketData> marketData = mapper.convertValue(kafkaConsumer.payload, new TypeReference<>() {});
+
+        for (MarketData marketDatum : marketData) {
+            if (marketDatum.getTICKER().equals(order.getProduct())) {
+                double differenceInPrice = marketDatum.getASK_PRICE() - order.getPrice();
+                if ((differenceInPrice > 0.5 && differenceInPrice < 1.0) && (marketDatum.getSELL_LIMIT() >= order.getQuantity())) {
                     return true;
                 }
             }
         }
+
         return false;
+
     }
 
     public Boolean validateSellAgainstMarketData(Order order){
