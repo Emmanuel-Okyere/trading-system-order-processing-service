@@ -2,7 +2,6 @@ package com.tlc.group.seven.orderprocessingservice.order.service;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.gson.Gson;
 import com.tlc.group.seven.orderprocessingservice.authentication.model.User;
 import com.tlc.group.seven.orderprocessingservice.authentication.repository.UserRepository;
 import com.tlc.group.seven.orderprocessingservice.authentication.service.UserDetailsImpl;
