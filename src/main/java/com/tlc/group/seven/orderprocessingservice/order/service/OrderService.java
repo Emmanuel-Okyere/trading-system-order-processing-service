@@ -43,7 +43,7 @@ public class OrderService {
         switch (order.getSide().toLowerCase()){
             case "sell" :
                 if(validateSellOrderAgainstUserPortfolio(order)){
-                    return makeOrderToExhange(order);
+                    return makeOrderToExchange(order);
                 }
                                 else return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                         .body(ErrorResponse.builder()
@@ -51,7 +51,7 @@ public class OrderService {
                                 .message(ServiceConstants.portfolioCannotMakeOrder).build());
             case "buy" :{
                 if(validateBuyOrderAgainstUserPortfolio(order)){
-                    return makeOrderToExhange(order);
+                    return makeOrderToExchange(order);
                 }
                 else return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                         .body(ErrorResponse.builder()
@@ -138,7 +138,7 @@ public class OrderService {
         return false;
     }
     
-    public ResponseEntity<?> makeOrderToExhange(Order order){
+    public ResponseEntity<?> makeOrderToExchange(Order order){
         try {
             String response = webClient
                     .post()
