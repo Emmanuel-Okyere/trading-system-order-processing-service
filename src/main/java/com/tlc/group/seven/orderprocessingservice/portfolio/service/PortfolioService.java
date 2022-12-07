@@ -1,4 +1,4 @@
-package com.tlc.group.seven.orderprocessingservice.portfolio.controller;
+package com.tlc.group.seven.orderprocessingservice.portfolio.service;
 
 import com.tlc.group.seven.orderprocessingservice.authentication.model.User;
 import com.tlc.group.seven.orderprocessingservice.authentication.repository.UserRepository;
@@ -31,11 +31,11 @@ public class PortfolioService {
     private OrderRepository orderRepository;
 
     public ResponseEntity<?> createPortfolio(Portfolio portfolio){
-        if(portfolioRepository.findPortfolioByName(portfolio.getName()).isEmpty()){
+        if(portfolioRepository.findPortfolioByTicker(portfolio.getTicker()).isEmpty()){
             UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
             User user = userRepository.getReferenceById(userDetails.getId());
             portfolio.setUsers(user);
-            portfolio.setBalance(50.00);
+            portfolio.setQuantity(0.00);
             portfolioRepository.save(portfolio);
             Map<?,?> statusResponse = Map.of("status", ServiceConstants.successStatus,"message",ServiceConstants.portfolioCreationSuccess,"data", portfolio);
             return ResponseEntity.status(HttpStatus.CREATED).body(statusResponse);

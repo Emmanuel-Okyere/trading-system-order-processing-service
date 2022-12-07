@@ -137,11 +137,12 @@ public class OrderService {
         User user = userRepository.getReferenceById(userDetails.getId());
         Optional<Portfolio> usersPortfolio = portfolioRepository.findById(order.getPortfolioId());
         if(usersPortfolio.isPresent()){
-            if(order.getPrice()*order.getQuantity()<= usersPortfolio.get().getBalance()){
-                System.out.println("************Can not make beacuse your money small****************");
+            double totalOrderPrice = order.getPrice()*order.getQuantity();
+            if(totalOrderPrice<= user.getBalance()){
+                user.setBalance(user.getBalance()-totalOrderPrice);
+                userRepository.save(user);
                 return true;
             }
-            System.out.println("************Can not make bessssssacuse your money small****************");
             return false;
         }
         return false;
@@ -186,41 +187,19 @@ public class OrderService {
     public Boolean validateBuyAgainstMarketData(Order order){
         ObjectMapper mapper = new ObjectMapper();
         List<MarketData> marketData = mapper.convertValue(kafkaConsumer.payload, new TypeReference<>() {});
-//        for (MarketData marketDatum : marketData) {
-//            if (marketDatum.getTICKER().equals(order.getProduct())) {
-//                double differenceInPrice = marketDatum.getASK_PRICE() - order.getPrice();
-//                if ((differenceInPrice > 0.5 && differenceInPrice < 1.0) && (marketDatum.getSELL_LIMIT() >= order.getQuantity())) {
-//                    return true;
-//                }
-//            }
-//        }
         List<?> marketData1 = marketData.stream().filter(data->data.getTICKER().equals(order.getProduct()))
-                .filter(x->(Math.abs(x.getASK_PRICE() - order.getPrice()) >0.5 && Math.abs(x.getASK_PRICE() - order.getPrice())<=1.0)).toList();
-        if(marketData1.isEmpty()){
-            return false;
-        }
-        return true;
+                .filter(x->(Math.abs(x.getASK_PRICE() - order.getPrice()) >0.5 && Math.abs(x.getASK_PRICE() - order.getPrice())<=1.0))
+                .toList();
+        return !marketData1.isEmpty();
     }
 
     public Boolean validateSellAgainstMarketData(Order order){
         ObjectMapper mapper = new ObjectMapper();
         List<MarketData> marketData = mapper.convertValue(kafkaConsumer.payload, new TypeReference<>() {});
-//        for (MarketData markData: marketData){
-//            if(markData.getTICKER().equals(order.getProduct())){
-//                double differenceInPrice = Math.abs(markData.getBID_PRICE()-order.getPrice());
-//                if((differenceInPrice >=0.00 && differenceInPrice <=1.00) && (markData.getBUY_LIMIT()>=order.getQuantity())){
-//                    return true;
-//                }
-//            }
-//        }
         List<?> marketData1 = marketData.stream()
                 .filter(x-> x.getTICKER().equals(order.getProduct()))
                 .filter(x-> (Math.abs(x.getBID_PRICE()-order.getPrice())<=0 && (Math.abs(x.getBUY_LIMIT() - order.getQuantity())<=1.0)))
                 .toList();
-
-        if(marketData1.isEmpty()){
-            return false;
-        }
-        return true;
+        return !marketData1.isEmpty();
     }
 }
