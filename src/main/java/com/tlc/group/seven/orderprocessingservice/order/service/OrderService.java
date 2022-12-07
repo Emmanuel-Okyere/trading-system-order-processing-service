@@ -29,6 +29,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.toList;
 
@@ -185,29 +186,41 @@ public class OrderService {
     public Boolean validateBuyAgainstMarketData(Order order){
         ObjectMapper mapper = new ObjectMapper();
         List<MarketData> marketData = mapper.convertValue(kafkaConsumer.payload, new TypeReference<>() {});
-
-        for (MarketData marketDatum : marketData) {
-            if (marketDatum.getTICKER().equals(order.getProduct())) {
-                double differenceInPrice = marketDatum.getASK_PRICE() - order.getPrice();
-                if ((differenceInPrice > 0.5 && differenceInPrice < 1.0) && (marketDatum.getSELL_LIMIT() >= order.getQuantity())) {
-                    return true;
-                }
-            }
+//        for (MarketData marketDatum : marketData) {
+//            if (marketDatum.getTICKER().equals(order.getProduct())) {
+//                double differenceInPrice = marketDatum.getASK_PRICE() - order.getPrice();
+//                if ((differenceInPrice > 0.5 && differenceInPrice < 1.0) && (marketDatum.getSELL_LIMIT() >= order.getQuantity())) {
+//                    return true;
+//                }
+//            }
+//        }
+        List<?> marketData1 = marketData.stream().filter(data->data.getTICKER().equals(order.getProduct()))
+                .filter(x->(Math.abs(x.getASK_PRICE() - order.getPrice()) >0.5 && Math.abs(x.getASK_PRICE() - order.getPrice())<=1.0)).toList();
+        if(marketData1.isEmpty()){
+            return false;
         }
-
-        return false;
+        return true;
     }
 
     public Boolean validateSellAgainstMarketData(Order order){
-        List <MarketData> marketData=  kafkaConsumer.payload;
-        for (MarketData markData: marketData){
-            if(markData.getTICKER().equals(order.getProduct())){
-                double differenceInPrice = markData.getBID_PRICE()-order.getPrice();
-                if((differenceInPrice >0.5 && differenceInPrice <1.0) && (markData.getBUY_LIMIT()>=order.getQuantity())){
-                    return true;
-                }
-            }
+        ObjectMapper mapper = new ObjectMapper();
+        List<MarketData> marketData = mapper.convertValue(kafkaConsumer.payload, new TypeReference<>() {});
+//        for (MarketData markData: marketData){
+//            if(markData.getTICKER().equals(order.getProduct())){
+//                double differenceInPrice = Math.abs(markData.getBID_PRICE()-order.getPrice());
+//                if((differenceInPrice >=0.00 && differenceInPrice <=1.00) && (markData.getBUY_LIMIT()>=order.getQuantity())){
+//                    return true;
+//                }
+//            }
+//        }
+        List<?> marketData1 = marketData.stream()
+                .filter(x-> x.getTICKER().equals(order.getProduct()))
+                .filter(x-> (Math.abs(x.getBID_PRICE()-order.getPrice())<=0 && (Math.abs(x.getBUY_LIMIT() - order.getQuantity())<=1.0)))
+                .toList();
+
+        if(marketData1.isEmpty()){
+            return false;
         }
-        return false;
+        return true;
     }
 }
