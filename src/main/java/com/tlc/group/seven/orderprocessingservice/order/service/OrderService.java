@@ -49,10 +49,12 @@ public class OrderService {
     WebClient webClient = WebClient.create(exchangeURL);
 
     public ResponseEntity<?> createOrder(Order order) {
+        UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        User user = userRepository.getReferenceById(userDetails.getId());
         switch (order.getSide().toLowerCase()){
             case "sell" :
                 if(validateSellOrderAgainstUserPortfolio(order) && validateSellAgainstMarketData(order)){
-                    return makeOrderToExchange(order);
+                    return makeOrderToExchange(order, user);
                 }
                                 else return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                         .body(ErrorResponse.builder()
@@ -60,7 +62,7 @@ public class OrderService {
                                 .message(ServiceConstants.portfolioCannotMakeOrder).build());
             case "buy" :{
                 if(validateBuyOrderAgainstUserPortfolio(order) && validateBuyAgainstMarketData(order)){
-                    return makeOrderToExchange(order);
+                    return makeOrderToExchange(order, user);
                 }
                 else return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                         .body(ErrorResponse.builder()
@@ -111,11 +113,6 @@ public class OrderService {
                         .build());
     }
 
-    public void validateSellOrderWithPortfolio(Order order){
-        UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        User user = userRepository.getReferenceById(userDetails.getId());
-    }
-
     public Boolean validateSellOrderAgainstUserPortfolio(Order order){
         UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         User user = userRepository.getReferenceById(userDetails.getId());
@@ -140,7 +137,6 @@ public class OrderService {
             double totalOrderPrice = order.getPrice()*order.getQuantity();
             if(totalOrderPrice<= user.getBalance()){
                 user.setBalance(user.getBalance()-totalOrderPrice);
-                userRepository.save(user);
                 return true;
             }
             return false;
@@ -148,7 +144,7 @@ public class OrderService {
         return false;
     }
     
-    public ResponseEntity<?> makeOrderToExchange(Order order){
+    public ResponseEntity<?> makeOrderToExchange(Order order, User user){
         try {
             String response = webClient
                     .post()
@@ -163,6 +159,7 @@ public class OrderService {
                 if(portfolio.isPresent()){
                     order.setPortfolio(portfolio.get());
                     orderRepository.save(order);
+                    userRepository.save(user);
                     OrderResponse orderResponse = new OrderResponse(
                             order.getID(), order.getOrderId(),
                             order.getQuantity(), order.getProduct(),
