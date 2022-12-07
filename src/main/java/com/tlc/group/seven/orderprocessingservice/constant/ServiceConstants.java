@@ -30,4 +30,6 @@ public interface ServiceConstants {
      String portfolioGettingSuccess = "portfolios getting success";
      String portfolioDeleteSuccess = "portfolios deleting was successful";
      String portfolioDeleteFailure = "portfolios deleting was unsuccessful";
+
+     double defaultTopUpAmount = 50_000.0;
 }
