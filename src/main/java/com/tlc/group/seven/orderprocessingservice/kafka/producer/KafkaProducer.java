@@ -1,6 +1,6 @@
 package com.tlc.group.seven.orderprocessingservice.kafka.producer;
 
-import com.tlc.group.seven.orderprocessingservice.log.LogData;
+import com.tlc.group.seven.orderprocessingservice.log.system.SystemLog;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -15,9 +15,9 @@ public class KafkaProducer {
     private static final Logger LOGGER = LoggerFactory.getLogger(KafkaProducer.class);
 
     private KafkaTemplate<String, String> kafkaTemplate;
-    private KafkaTemplate<String, LogData> kafkaTemplateLog;
+    private KafkaTemplate<String, SystemLog> kafkaTemplateLog;
 
-    public KafkaProducer(KafkaTemplate<String, String> kafkaTemplate, KafkaTemplate<String, LogData> kafkaTemplateLog) {
+    public KafkaProducer(KafkaTemplate<String, String> kafkaTemplate, KafkaTemplate<String, SystemLog> kafkaTemplateLog) {
         this.kafkaTemplate = kafkaTemplate;
         this.kafkaTemplateLog = kafkaTemplateLog;
     }
@@ -31,9 +31,9 @@ public class KafkaProducer {
         kafkaTemplate.send(message);
     }
 
-    public void sendResponseToKafkaLogData(LogData data){
+    public void sendResponseToKafkaLogData(SystemLog data){
         LOGGER.info(String.format("LogData:: Response sent to Kafka -> %s", data.toString()));
-        Message<LogData> message = MessageBuilder
+        Message<SystemLog> message = MessageBuilder
                 .withPayload(data)
                 .setHeader(KafkaHeaders.TOPIC, "log-data")
                 .build();

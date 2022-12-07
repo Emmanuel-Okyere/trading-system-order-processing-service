@@ -1,4 +1,4 @@
-package com.tlc.group.seven.orderprocessingservice.log;
+package com.tlc.group.seven.orderprocessingservice.log.system;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -11,7 +11,7 @@ import java.util.Date;
 @Setter
 @AllArgsConstructor
 @Data
-public class LogData {
+public class SystemLog {
     private String title;
     private String event;
     private String description;
