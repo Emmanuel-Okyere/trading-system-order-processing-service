@@ -10,9 +10,10 @@ public class UserCreationResponse {
     private String email;
 
     private double balance;
-    public UserCreationResponse(Long id, String name, String email) {
+    public UserCreationResponse(Long id, String name, String email, Double balance) {
         this.id = id;
         this.name = name;
         this.email = email;
+        this.balance = balance;
     }
 }

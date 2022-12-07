@@ -107,7 +107,7 @@ public class AuthenticationService {
         user.setRoles(roles);
         user.setBalance(50000.00);
         userRepository.save(user);
-        Map<?, ?> response = Map.of("status",ServiceConstants.successStatus, "message",ServiceConstants.successUserCreation,"data", new UserCreationResponse(user.getID(), user.getName(),user.getEmail()));
+        Map<?, ?> response = Map.of("status",ServiceConstants.successStatus, "message",ServiceConstants.successUserCreation,"data", new UserCreationResponse(user.getID(), user.getName(),user.getEmail(),user.getBalance()));
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(response);
 

@@ -24,6 +24,7 @@ public class Portfolio {
     private User users;
 
     public Portfolio(String defaultPortfolio) {
+        this.ticker = defaultPortfolio;
     }
     public Portfolio(){
 

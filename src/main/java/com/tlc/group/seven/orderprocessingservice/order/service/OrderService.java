@@ -82,7 +82,6 @@ public class OrderService {
         Optional<Order> order = orderRepository.findOrderByOrderId(orderId);
         if (order.isPresent()) {
             try {
-
                 OrderExecution response = webClient
                         .get()
                         .uri("/order/" + orderId)
