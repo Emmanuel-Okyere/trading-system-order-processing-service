@@ -35,7 +35,7 @@ public class PortfolioService {
             UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
             User user = userRepository.getReferenceById(userDetails.getId());
             portfolio.setUsers(user);
-            portfolio.setQuantity(0.00);
+            portfolio.setQuantity(0);
             portfolioRepository.save(portfolio);
             Map<?,?> statusResponse = Map.of("status", ServiceConstants.successStatus,"message",ServiceConstants.portfolioCreationSuccess,"data", portfolio);
             return ResponseEntity.status(HttpStatus.CREATED).body(statusResponse);
@@ -67,12 +67,18 @@ public class PortfolioService {
                 .body(response);
     }
 
-    public ResponseEntity<?> deletePortfolio(Long portofolioId) {
-        Optional<Portfolio> portfolio = portfolioRepository.findById(portofolioId);
+    public ResponseEntity<?> deletePortfolio(Long portfolioId) {
+        Optional<Portfolio> portfolio = portfolioRepository.findById(portfolioId);
         if(portfolio.isPresent()){
-            portfolioRepository.delete(portfolio.get());
-            Map<?,?> response = Map.of("status",ServiceConstants.successStatus,"message",ServiceConstants.portfolioDeleteSuccess);
-            return ResponseEntity.status(HttpStatus.NO_CONTENT).body(response);
+            if(portfolio.get().getTicker().equals(ServiceConstants.defaultPortfolio)){
+                Map<?,?> response = Map.of("status",ServiceConstants.failureStatus,"message",ServiceConstants.defaultPortfolioDeleteFailure);
+                return ResponseEntity.status(HttpStatus.NO_CONTENT).body(response);
+            }
+            else{
+                portfolioRepository.delete(portfolio.get());
+                Map<?,?> response = Map.of("status",ServiceConstants.successStatus,"message",ServiceConstants.portfolioDeleteSuccess);
+                return ResponseEntity.status(HttpStatus.NO_CONTENT).body(response);
+            }
         }
         else {
             Map<?,?> response = Map.of("status",ServiceConstants.failureStatus,"message",ServiceConstants.portfolioDeleteFailure);

@@ -22,4 +22,10 @@ public class Portfolio {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "users_id")
     private User users;
+
+    public Portfolio(String defaultPortfolio) {
+    }
+    public Portfolio(){
+
+    }
 }

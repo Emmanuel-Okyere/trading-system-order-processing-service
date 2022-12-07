@@ -12,6 +12,9 @@ import com.tlc.group.seven.orderprocessingservice.authentication.repository.Role
 import com.tlc.group.seven.orderprocessingservice.authentication.repository.UserRepository;
 import com.tlc.group.seven.orderprocessingservice.authentication.security.jwt.JwtUtils;
 import com.tlc.group.seven.orderprocessingservice.constant.ServiceConstants;
+import com.tlc.group.seven.orderprocessingservice.portfolio.model.Portfolio;
+import com.tlc.group.seven.orderprocessingservice.portfolio.repository.PortfolioRepository;
+import com.tlc.group.seven.orderprocessingservice.portfolio.service.PortfolioService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -39,12 +42,23 @@ public class AuthenticationService {
     PasswordEncoder passwordEncoder;
     @Autowired
     JwtUtils jwtUtils;
+    @Autowired
+    PortfolioService portfolioService;
+    @Autowired
+    PortfolioRepository portfolioRepository;
 
     public ResponseEntity<?> authenticateUserLogin(LoginRequest loginRequest){
         Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(loginRequest.getEmail(),loginRequest.getPassword()));
         SecurityContextHolder.getContext().setAuthentication(authentication);
         String jwt = jwtUtils.generateJwtToken(authentication);
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+        User user = userRepository.getReferenceById(userDetails.getId());
+        Optional<Portfolio> portfolio = portfolioRepository.findPortfolioByTicker(ServiceConstants.defaultPortfolio);
+        if(portfolio.isEmpty()){
+            Portfolio defaultPortfolio = new Portfolio(ServiceConstants.defaultPortfolio);
+            defaultPortfolio.setUsers(user);
+            portfolioRepository.save(defaultPortfolio);
+        }
         List<String> roles = userDetails.getAuthorities().stream().map(GrantedAuthority::getAuthority).collect(Collectors.toList());
         Map<?, ?> response = Map
                 .of("status",ServiceConstants.successStatus,
