@@ -27,7 +27,8 @@ public class Order {
     private Integer quantity;
     @NotNull
     private Double price;
-
+    @JsonIgnore
+    private String orderStatus;
     @NotBlank(message = "Type is required")
     @Size(min = 2)
     private String type;

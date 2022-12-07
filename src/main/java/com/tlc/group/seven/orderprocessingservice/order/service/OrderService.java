@@ -77,6 +77,8 @@ public class OrderService {
     }
 
     public ResponseEntity<?> getOrderById(String orderId) {
+        UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        User user = userRepository.getReferenceById(userDetails.getId());
         Optional<Order> order = orderRepository.findOrderByOrderId(orderId);
         if (order.isPresent()) {
             try {
@@ -90,6 +92,16 @@ public class OrderService {
                 if (response !=null) {
                     response.setCreatedAt(order.get().getCreatedAt());
                     response.setUpdatedAt(new Date());
+                    if(order.get().getOrderStatus().equals(ServiceConstants.orderStatusOpen)){
+                        if(response.getCommulativeQuantity()==order.get().getQuantity()){
+                            order.get().getPortfolio().setQuantity(response.getCommulativeQuantity());
+                            portfolioRepository.save(order.get().getPortfolio());
+                            order.get().setOrderStatus(ServiceConstants.orderStatusClose);
+                            user.setBalance(response.getCommulativeQuantity()*response.getPrice());
+                            orderRepository.save(order.get());
+                            userRepository.save(user);
+                        }
+                    }
                     return ResponseEntity
                             .status(HttpStatus.OK)
                             .body(response);
@@ -153,6 +165,7 @@ public class OrderService {
                 Optional<Portfolio> portfolio = portfolioRepository.findById(order.getPortfolioId());
                 if(portfolio.isPresent()){
                     order.setPortfolio(portfolio.get());
+                    order.setOrderStatus(ServiceConstants.orderStatusOpen);
                     orderRepository.save(order);
                     double totalOrderPrice =order.getPrice()*order.getQuantity();
                             user.setBalance(user.getBalance()-totalOrderPrice);
