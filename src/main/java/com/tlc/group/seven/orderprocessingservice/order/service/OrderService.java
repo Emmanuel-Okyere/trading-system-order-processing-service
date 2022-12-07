@@ -197,7 +197,6 @@ public class OrderService {
         }
 
         return false;
-
     }
 
     public Boolean validateSellAgainstMarketData(Order order){
