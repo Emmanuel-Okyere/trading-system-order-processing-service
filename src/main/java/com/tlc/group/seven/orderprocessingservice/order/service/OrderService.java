@@ -134,12 +134,7 @@ public class OrderService {
         User user = userRepository.getReferenceById(userDetails.getId());
         Optional<Portfolio> usersPortfolio = portfolioRepository.findById(order.getPortfolioId());
         if(usersPortfolio.isPresent()){
-            double totalOrderPrice = order.getPrice()*order.getQuantity();
-            if(totalOrderPrice<= user.getBalance()){
-                user.setBalance(user.getBalance()-totalOrderPrice);
-                return true;
-            }
-            return false;
+            return order.getPrice() * order.getQuantity() <= user.getBalance();
         }
         return false;
     }
@@ -159,6 +154,8 @@ public class OrderService {
                 if(portfolio.isPresent()){
                     order.setPortfolio(portfolio.get());
                     orderRepository.save(order);
+                    double totalOrderPrice =order.getPrice()*order.getQuantity();
+                            user.setBalance(user.getBalance()-totalOrderPrice);
                     userRepository.save(user);
                     OrderResponse orderResponse = new OrderResponse(
                             order.getID(), order.getOrderId(),
