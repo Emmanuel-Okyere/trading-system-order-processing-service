@@ -34,4 +34,5 @@ public interface ServiceConstants {
      String orderStatusOpen = "open";
      String orderStatusClose = "close";
      String defaultPortfolio = "DEFAULT";
+     String topUpSuccess = "account top up successful";
 }

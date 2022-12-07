@@ -7,6 +7,7 @@ import com.tlc.group.seven.orderprocessingservice.constant.ServiceConstants;
 import com.tlc.group.seven.orderprocessingservice.order.model.Order;
 import com.tlc.group.seven.orderprocessingservice.order.repository.OrderRepository;
 import com.tlc.group.seven.orderprocessingservice.portfolio.model.Portfolio;
+import com.tlc.group.seven.orderprocessingservice.portfolio.payload.TopUpRequest;
 import com.tlc.group.seven.orderprocessingservice.portfolio.repository.PortfolioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -14,6 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import javax.validation.Valid;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -31,9 +33,9 @@ public class PortfolioService {
     private OrderRepository orderRepository;
 
     public ResponseEntity<?> createPortfolio(Portfolio portfolio){
-        if(portfolioRepository.findPortfolioByTicker(portfolio.getTicker()).isEmpty()){
-            UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-            User user = userRepository.getReferenceById(userDetails.getId());
+        UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        User user = userRepository.getReferenceById(userDetails.getId());
+        if(portfolioRepository.findPortfolioByTickerAndUsers_iD(portfolio.getTicker(),user.getID()).isEmpty()){
             portfolio.setUsers(user);
             portfolio.setQuantity(0);
             portfolioRepository.save(portfolio);
@@ -72,7 +74,7 @@ public class PortfolioService {
         if(portfolio.isPresent()){
             if(portfolio.get().getTicker().equals(ServiceConstants.defaultPortfolio)){
                 Map<?,?> response = Map.of("status",ServiceConstants.failureStatus,"message",ServiceConstants.defaultPortfolioDeleteFailure);
-                return ResponseEntity.status(HttpStatus.NO_CONTENT).body(response);
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
             }
             else{
                 portfolioRepository.delete(portfolio.get());
@@ -84,5 +86,14 @@ public class PortfolioService {
             Map<?,?> response = Map.of("status",ServiceConstants.failureStatus,"message",ServiceConstants.portfolioDeleteFailure);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
         }
+    }
+    public ResponseEntity<?> toUpUserAccount(TopUpRequest topUpRequest) {
+        UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        User user = userRepository.getReferenceById(userDetails.getId());
+        user.setBalance(user.getBalance()+topUpRequest.getAmountToTopUp());
+        userRepository.save(user);
+        Map<?, ?> response = Map.of("status",ServiceConstants.successStatus, "message",ServiceConstants.topUpSuccess,"data",  Map.of("currentBalance",user.getBalance()));
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(response);
     }
 }

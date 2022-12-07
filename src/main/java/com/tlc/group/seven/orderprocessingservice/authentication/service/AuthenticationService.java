@@ -53,7 +53,7 @@ public class AuthenticationService {
         String jwt = jwtUtils.generateJwtToken(authentication);
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
         User user = userRepository.getReferenceById(userDetails.getId());
-        Optional<Portfolio> portfolio = portfolioRepository.findPortfolioByTicker(ServiceConstants.defaultPortfolio);
+        Optional<Portfolio> portfolio = portfolioRepository.findPortfolioByTickerAndUsers_iD(ServiceConstants.defaultPortfolio, user.getID());
         if(portfolio.isEmpty()){
             Portfolio defaultPortfolio = new Portfolio(ServiceConstants.defaultPortfolio);
             defaultPortfolio.setUsers(user);

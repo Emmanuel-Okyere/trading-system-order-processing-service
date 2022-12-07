@@ -26,15 +26,17 @@ public class AuthenticationController {
 
     @PostMapping("/login")
     public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginRequest loginRequest){
-//        SystemLog systemLog = new SystemLog("authenticateUser", "user login", "user login initiated", "order-processing", new Date());
-//        kafkaProducer.sendResponseToKafkaLogData(systemLog);
+        SystemLog systemLog = new SystemLog("authenticateUser", "user login", "user login initiated", "order-processing", new Date());
+        kafkaProducer.sendResponseToKafkaLogData(systemLog);
         return authenticationService.authenticateUserLogin(loginRequest);
     }
 
     @PostMapping("/register")
     public ResponseEntity<?> registerUser(@Valid @RequestBody SignupRequest signUpRequest) throws RoleNotFoundException {
-//        SystemLog systemLog = new SystemLog("registerUser", "register user", "register new user initiated", "order-processing", new Date());
-//        kafkaProducer.sendResponseToKafkaLogData(systemLog);
+        SystemLog systemLog = new SystemLog("registerUser", "register user", "register new user initiated", "order-processing", new Date());
+        kafkaProducer.sendResponseToKafkaLogData(systemLog);
         return authenticationService.registerUser(signUpRequest);
     }
+
+
 }

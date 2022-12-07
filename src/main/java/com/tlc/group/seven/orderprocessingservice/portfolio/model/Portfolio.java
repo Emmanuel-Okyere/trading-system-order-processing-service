@@ -9,7 +9,7 @@ import javax.validation.constraints.NotNull;
 
 @Data
 @Entity
-@Table
+@Table(uniqueConstraints = {@UniqueConstraint(columnNames = {"ticker","users_id"})})
 public class Portfolio {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

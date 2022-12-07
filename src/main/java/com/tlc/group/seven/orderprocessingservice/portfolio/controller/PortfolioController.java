@@ -1,6 +1,7 @@
 package com.tlc.group.seven.orderprocessingservice.portfolio.controller;
 
 import com.tlc.group.seven.orderprocessingservice.portfolio.model.Portfolio;
+import com.tlc.group.seven.orderprocessingservice.portfolio.payload.TopUpRequest;
 import com.tlc.group.seven.orderprocessingservice.portfolio.service.PortfolioService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -29,8 +30,13 @@ public class PortfolioController {
         return portfolioService.getAllOrdersByUser(portfolioId);
     }
 
-    @DeleteMapping("/{portofolioId}")
-    public ResponseEntity<?> deletePortfolioById(@PathVariable Long portofolioId){
-        return portfolioService.deletePortfolio(portofolioId);
+    @DeleteMapping("/{portfolioId}")
+    public ResponseEntity<?> deletePortfolioById(@PathVariable Long portfolioId){
+        return portfolioService.deletePortfolio(portfolioId);
+    }
+
+    @PostMapping("/topup")
+    public ResponseEntity<?> topUpAccount(@Valid @RequestBody TopUpRequest topUpRequest){
+        return portfolioService.toUpUserAccount(topUpRequest);
     }
 }
