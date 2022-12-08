@@ -5,8 +5,6 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.tlc.group.seven.orderprocessingservice.portfolio.model.Portfolio;
 import lombok.Data;
 import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.OnDelete;
-import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import javax.persistence.*;
@@ -27,7 +25,7 @@ public class Order {
     private Integer quantity;
     @NotNull
     private Double price;
-    @JsonIgnoreProperties
+    @JsonIgnore
     private String orderStatus;
     @NotBlank(message = "Type is required")
     @Size(min = 2)
@@ -41,8 +39,7 @@ public class Order {
     private Date createdAt;
     @UpdateTimestamp
     private Date updatedAt;
-
-    @NotNull
+    @JsonIgnoreProperties
     @Transient
     private Long portfolioId;
 
