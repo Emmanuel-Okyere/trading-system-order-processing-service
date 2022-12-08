@@ -126,7 +126,7 @@ public class OrderService {
         if (usersPortfolio.isPresent()) {
             List<Order> userOrders = orderRepository.findOrderByPortfolio_iD(order.getPortfolioId());
             for (Order userOrder : userOrders) {
-                if (userOrder.getProduct().equals(order.getProduct())) { //user order.getStatus==closed so see that they own it.
+                if (userOrder.getProduct().equals(order.getProduct()) && order.getOrderStatus().equals(ServiceConstants.orderStatusClose)) {
                     return true;
                 }
             }
@@ -209,11 +209,11 @@ public class OrderService {
     public ResponseEntity<?> cancelOrder(String orderId) {
         UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         User user = userRepository.getReferenceById(userDetails.getId());
+        ResponseEntity<?> response = getOrderById(orderId);
+        OrderExecution orderExecution = (OrderExecution) response.getBody();
         Optional<Order> order = orderRepository.findOrderByOrderId(orderId);
         if (order.isPresent()) {
             if (order.get().getOrderStatus().equals(ServiceConstants.orderStatusOpen)) {
-                ResponseEntity<?> response = getOrderById(orderId);
-                OrderExecution orderExecution = (OrderExecution) response.getBody();
                 if (orderExecution != null) {
                     double executedAmount = orderExecution.getPrice() * (orderExecution.getQuantity()-orderExecution.getCommulativeQuantity());
                     if(cancelOrderOnExchange(orderId)){
