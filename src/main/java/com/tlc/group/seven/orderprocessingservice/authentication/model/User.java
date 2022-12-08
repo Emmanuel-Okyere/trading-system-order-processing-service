@@ -37,7 +37,7 @@ public class User {
     @NotBlank(message = "Password required")
     @Size(max = 120, min = 8)
     private String password;
-    @Column
+    @Column(scale = 2)
     private double balance;
     @ManyToMany
     @JoinTable(name = "users_role",joinColumns = @JoinColumn(name = "users_id"),inverseJoinColumns = @JoinColumn(name = "role_id"))
