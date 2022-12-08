@@ -190,7 +190,7 @@ public class OrderService {
         List<MarketData> marketData = mapper.convertValue(kafkaConsumer.payload, new TypeReference<>() {
         });
         List<?> marketData1 = marketData.stream().filter(data -> data.getTICKER().equals(order.getProduct()))
-                .filter(x -> (Math.abs(x.getASK_PRICE() - order.getPrice()) >= 0 && Math.abs(x.getASK_PRICE() - order.getPrice()) <= 1.0))
+                .filter(x -> ((Math.abs(x.getASK_PRICE() - order.getPrice()) >= 0 && Math.abs(x.getASK_PRICE() - order.getPrice()) <= 1.0)) && (order.getQuantity()) <= x.getSELL_LIMIT())
                 .toList();
         return !marketData1.isEmpty();
     }
@@ -201,7 +201,7 @@ public class OrderService {
         });
         List<?> marketData1 = marketData.stream()
                 .filter(x -> x.getTICKER().equals(order.getProduct()))
-                .filter(x -> (Math.abs(x.getBID_PRICE() - order.getPrice()) >= 0 && (Math.abs(x.getBUY_LIMIT() - order.getQuantity()) <= 1.0)))
+                .filter(x -> ((Math.abs(x.getBID_PRICE() - order.getPrice()) >= 0 && (Math.abs(x.getBID_PRICE() - order.getPrice())) <=1)) && (order.getQuantity()) <= x.getBUY_LIMIT())
                 .toList();
         return !marketData1.isEmpty();
     }
