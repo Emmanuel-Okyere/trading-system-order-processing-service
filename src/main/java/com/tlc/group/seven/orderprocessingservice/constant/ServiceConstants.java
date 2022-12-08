@@ -37,4 +37,5 @@ public interface ServiceConstants {
      String topUpSuccess = "account top up successful";
      String orderCancelSuccess = "order cancellation success";
      String orderCancelFailure = "order cancellation failed or has been fulfilled";
+     String userBadCredential = "password and/or email address invalid";
 }

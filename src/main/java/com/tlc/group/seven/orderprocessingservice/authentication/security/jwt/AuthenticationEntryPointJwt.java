@@ -1,6 +1,7 @@
 package com.tlc.group.seven.orderprocessingservice.authentication.security.jwt;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.tlc.group.seven.orderprocessingservice.constant.ServiceConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
@@ -24,10 +25,8 @@ public class AuthenticationEntryPointJwt implements AuthenticationEntryPoint {
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         final Map<String, Object> body = new HashMap<>();
-        body.put("status","failure");
-        body.put("error","Unauthorised");
-        body.put("message",authException.getMessage());
-        body.put("path",request.getServletPath());
+        body.put("status", ServiceConstants.failureStatus);
+        body.put("message",ServiceConstants.userBadCredential);
 
         final ObjectMapper mapper = new ObjectMapper();
         mapper.writeValue(response.getOutputStream(),body);
