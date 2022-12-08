@@ -103,7 +103,8 @@ public class OrderService {
                     }
                     return ResponseEntity
                             .status(HttpStatus.OK)
-                            .body(response);
+                            .body(Map
+                                    .of("status",ServiceConstants.successStatus,"message",ServiceConstants.ordersGettingSuccess,"data",response));
                 }
             } catch (WebClientResponseException | WebClientRequestException e) {
                 return ResponseEntity

@@ -16,7 +16,7 @@ public class Portfolio {
     private Long iD;
     @NotNull
     private String ticker;
-    private Integer quantity;
+    private int quantity;
 
     @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
