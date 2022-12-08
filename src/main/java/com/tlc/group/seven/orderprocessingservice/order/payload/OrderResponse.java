@@ -13,13 +13,15 @@ public class OrderResponse {
     private String product;
     private double price;
     private String type;
+    private String orderStatus;
 
-    public OrderResponse( Long id, String orderId, int quantity, String product, double price, String type) {
+    public OrderResponse( Long id, String orderId, int quantity, String product, double price, String type, String orderStatus) {
         this.id = id;
         this.orderId = orderId;
         this.quantity = quantity;
         this.product = product;
         this.price = price;
         this.type = type;
+        this.orderStatus = orderStatus;
     }
 }

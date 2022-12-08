@@ -174,7 +174,8 @@ public class OrderService {
                     OrderResponse orderResponse = new OrderResponse(
                             order.getID(), order.getOrderId(),
                             order.getQuantity(), order.getProduct(),
-                            order.getPrice(), order.getType());
+                            order.getPrice(), order.getType(),
+                            order.getOrderStatus());
                     Map<?, ?> statusResponse = Map.of("status", ServiceConstants.successStatus, "message", ServiceConstants.orderCreationSuccess, "data", orderResponse);
                     return ResponseEntity.status(HttpStatus.CREATED).body(statusResponse);
                 }
