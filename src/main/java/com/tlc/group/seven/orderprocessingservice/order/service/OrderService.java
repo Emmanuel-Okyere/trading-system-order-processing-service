@@ -87,11 +87,11 @@ public class OrderService {
                     response.setCreatedAt(order.get().getCreatedAt());
                     response.setUpdatedAt(new Date());
                     if (order.get().getOrderStatus().equals(ServiceConstants.orderStatusOpen)) {
-                        if (response.getCommulativeQuantity() == order.get().getQuantity()) {
-                            order.get().getPortfolio().setQuantity(response.getCommulativeQuantity());
+                        if (response.getCommulativeQuantity() == 0) {
+                            order.get().getPortfolio().setQuantity(order.get().getPortfolio().getQuantity()+order.get().getQuantity());
                             portfolioRepository.save(order.get().getPortfolio());
                             order.get().setOrderStatus(ServiceConstants.orderStatusClose);
-                            user.setBalance(response.getCommulativeQuantity() * response.getPrice());
+                            user.setBalance(user.getBalance()+(response.getQuantity() * response.getCumulatitivePrice()));
                             orderRepository.save(order.get());
                             userRepository.save(user);
                         }
@@ -215,7 +215,7 @@ public class OrderService {
                 ResponseEntity<?> response = getOrderById(orderId);
                 OrderExecution orderExecution = (OrderExecution) response.getBody();
                 if (orderExecution != null) {
-                    double executedAmount = orderExecution.getCumulatitivePrice() * orderExecution.getCommulativeQuantity();
+                    double executedAmount = orderExecution.getPrice() * (orderExecution.getQuantity()-orderExecution.getCommulativeQuantity());
                     if(cancelOrderOnExchange(orderId)){
                         user.setBalance(user.getBalance() + executedAmount);
                         orderRepository.delete(order.get());

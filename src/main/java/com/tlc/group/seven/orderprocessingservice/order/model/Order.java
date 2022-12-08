@@ -27,7 +27,7 @@ public class Order {
     private Integer quantity;
     @NotNull
     private Double price;
-    @JsonIgnore
+    @JsonIgnoreProperties
     private String orderStatus;
     @NotBlank(message = "Type is required")
     @Size(min = 2)
@@ -41,7 +41,7 @@ public class Order {
     private Date createdAt;
     @UpdateTimestamp
     private Date updatedAt;
-    @JsonIgnoreProperties
+    @JsonIgnore
     @NotNull
     @Transient
     private Long portfolioId;
