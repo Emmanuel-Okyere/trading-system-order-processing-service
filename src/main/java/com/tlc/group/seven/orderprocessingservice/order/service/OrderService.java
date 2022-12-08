@@ -88,7 +88,12 @@ public class OrderService {
                     response.setUpdatedAt(new Date());
                     if (order.get().getOrderStatus().equals(ServiceConstants.orderStatusOpen)) {
                         if (response.getCommulativeQuantity() == 0) {
-                            order.get().getPortfolio().setQuantity(order.get().getPortfolio().getQuantity()+order.get().getQuantity());
+                            if(order.get().getSide().equalsIgnoreCase("sell")){
+                                order.get().getPortfolio().setQuantity(order.get().getPortfolio().getQuantity()-order.get().getQuantity());
+                            }
+                            else{
+                                order.get().getPortfolio().setQuantity(order.get().getPortfolio().getQuantity()+order.get().getQuantity());
+                            }
                             portfolioRepository.save(order.get().getPortfolio());
                             order.get().setOrderStatus(ServiceConstants.orderStatusClose);
                             user.setBalance(user.getBalance()+(response.getQuantity() * response.getCumulatitivePrice()));
@@ -126,7 +131,7 @@ public class OrderService {
         if (usersPortfolio.isPresent()) {
             List<Order> userOrders = orderRepository.findOrderByPortfolio_iD(order.getPortfolioId());
             for (Order userOrder : userOrders) {
-                if (userOrder.getProduct().equals(order.getProduct()) && order.getOrderStatus().equals(ServiceConstants.orderStatusClose)) {
+                if (userOrder.getProduct().equals(order.getProduct()) && userOrder.getOrderStatus().equals(ServiceConstants.orderStatusClose)) {
                     return true;
                 }
             }
@@ -161,9 +166,11 @@ public class OrderService {
                     order.setPortfolio(portfolio.get());
                     order.setOrderStatus(ServiceConstants.orderStatusOpen);
                     orderRepository.save(order);
+//                    if(order.getSide().equalsIgnoreCase("buy")){
                     double totalOrderPrice = order.getPrice() * order.getQuantity();
                     user.setBalance(user.getBalance() - totalOrderPrice);
                     userRepository.save(user);
+//                    }
                     OrderResponse orderResponse = new OrderResponse(
                             order.getID(), order.getOrderId(),
                             order.getQuantity(), order.getProduct(),
