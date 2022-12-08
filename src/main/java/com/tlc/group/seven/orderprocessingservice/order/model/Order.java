@@ -41,7 +41,7 @@ public class Order {
     private Date createdAt;
     @UpdateTimestamp
     private Date updatedAt;
-    @JsonIgnoreProperties
+
     @NotNull
     @Transient
     private Long portfolioId;
