@@ -35,4 +35,6 @@ public interface ServiceConstants {
      String orderStatusClose = "close";
      String defaultPortfolio = "DEFAULT";
      String topUpSuccess = "account top up successful";
+     String orderCancelSuccess = "order cancellation success";
+     String orderCancelFailure = "order cancellation failed or has been fulfilled";
 }

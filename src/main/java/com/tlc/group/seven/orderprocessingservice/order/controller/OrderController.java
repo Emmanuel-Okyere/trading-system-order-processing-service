@@ -26,5 +26,9 @@ public class OrderController {
     public ResponseEntity <?> getOrder(@PathVariable String orderId){
         return orderService.getOrderById(orderId);
     }
+    @DeleteMapping("/{orderId}")
+    public ResponseEntity<?> cancelOrder(@PathVariable String orderId){
+        return orderService.cancelOrder(orderId);
+    }
 
 }

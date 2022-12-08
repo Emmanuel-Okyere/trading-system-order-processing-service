@@ -48,20 +48,18 @@ public class OrderService {
     public ResponseEntity<?> createOrder(Order order) {
         UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         User user = userRepository.getReferenceById(userDetails.getId());
-        switch (order.getSide().toLowerCase()){
-            case "sell" :
-                if(validateSellOrderAgainstUserPortfolio(order) && validateSellAgainstMarketData(order)){
+        switch (order.getSide().toLowerCase()) {
+            case "sell":
+                if (validateSellOrderAgainstUserPortfolio(order) && validateSellAgainstMarketData(order)) {
                     return makeOrderToExchange(order, user);
-                }
-                                else return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                } else return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                         .body(ErrorResponse.builder()
                                 .status(ServiceConstants.failureStatus)
                                 .message(ServiceConstants.portfolioCannotMakeOrder).build());
-            case "buy" :{
-                if(validateBuyOrderAgainstUserPortfolio(order) && validateBuyAgainstMarketData(order)){
+            case "buy": {
+                if (validateBuyOrderAgainstUserPortfolio(order) && validateBuyAgainstMarketData(order)) {
                     return makeOrderToExchange(order, user);
-                }
-                else return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                } else return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                         .body(ErrorResponse.builder()
                                 .status(ServiceConstants.failureStatus)
                                 .message(ServiceConstants.insufficientBalance).build());
@@ -85,15 +83,15 @@ public class OrderService {
                         .retrieve()
                         .bodyToMono(OrderExecution.class)
                         .block();
-                if (response !=null) {
+                if (response != null) {
                     response.setCreatedAt(order.get().getCreatedAt());
                     response.setUpdatedAt(new Date());
-                    if(order.get().getOrderStatus().equals(ServiceConstants.orderStatusOpen)){
-                        if(response.getCommulativeQuantity()==order.get().getQuantity()){
+                    if (order.get().getOrderStatus().equals(ServiceConstants.orderStatusOpen)) {
+                        if (response.getCommulativeQuantity() == order.get().getQuantity()) {
                             order.get().getPortfolio().setQuantity(response.getCommulativeQuantity());
                             portfolioRepository.save(order.get().getPortfolio());
                             order.get().setOrderStatus(ServiceConstants.orderStatusClose);
-                            user.setBalance(response.getCommulativeQuantity()*response.getPrice());
+                            user.setBalance(response.getCommulativeQuantity() * response.getPrice());
                             orderRepository.save(order.get());
                             userRepository.save(user);
                         }
@@ -121,14 +119,14 @@ public class OrderService {
                         .build());
     }
 
-    public Boolean validateSellOrderAgainstUserPortfolio(Order order){
+    public Boolean validateSellOrderAgainstUserPortfolio(Order order) {
         UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         User user = userRepository.getReferenceById(userDetails.getId());
         Optional<Portfolio> usersPortfolio = portfolioRepository.findById(order.getPortfolioId());
-        if(usersPortfolio.isPresent()){
+        if (usersPortfolio.isPresent()) {
             List<Order> userOrders = orderRepository.findOrderByPortfolio_iD(order.getPortfolioId());
-            for(Order userOrder :userOrders){
-                if(userOrder.getProduct().equals(order.getProduct()) ){ //user order.getStatus==closed so see that they own it.
+            for (Order userOrder : userOrders) {
+                if (userOrder.getProduct().equals(order.getProduct())) { //user order.getStatus==closed so see that they own it.
                     return true;
                 }
             }
@@ -137,17 +135,17 @@ public class OrderService {
         return false;
     }
 
-    public Boolean validateBuyOrderAgainstUserPortfolio(Order order){
+    public Boolean validateBuyOrderAgainstUserPortfolio(Order order) {
         UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         User user = userRepository.getReferenceById(userDetails.getId());
         Optional<Portfolio> usersPortfolio = portfolioRepository.findById(order.getPortfolioId());
-        if(usersPortfolio.isPresent()){
+        if (usersPortfolio.isPresent()) {
             return order.getPrice() * order.getQuantity() <= user.getBalance();
         }
         return false;
     }
-    
-    public ResponseEntity<?> makeOrderToExchange(Order order, User user){
+
+    public ResponseEntity<?> makeOrderToExchange(Order order, User user) {
         try {
             String response = webClient
                     .post()
@@ -159,18 +157,18 @@ public class OrderService {
             if (response != null) {
                 order.setOrderId(response.substring(1, response.length() - 1));
                 Optional<Portfolio> portfolio = portfolioRepository.findById(order.getPortfolioId());
-                if(portfolio.isPresent()){
+                if (portfolio.isPresent()) {
                     order.setPortfolio(portfolio.get());
                     order.setOrderStatus(ServiceConstants.orderStatusOpen);
                     orderRepository.save(order);
-                    double totalOrderPrice =order.getPrice()*order.getQuantity();
-                            user.setBalance(user.getBalance()-totalOrderPrice);
+                    double totalOrderPrice = order.getPrice() * order.getQuantity();
+                    user.setBalance(user.getBalance() - totalOrderPrice);
                     userRepository.save(user);
                     OrderResponse orderResponse = new OrderResponse(
                             order.getID(), order.getOrderId(),
                             order.getQuantity(), order.getProduct(),
                             order.getPrice(), order.getType());
-                    Map <?,?> statusResponse = Map.of("status", ServiceConstants.successStatus,"message",ServiceConstants.orderCreationSuccess,"data",orderResponse);
+                    Map<?, ?> statusResponse = Map.of("status", ServiceConstants.successStatus, "message", ServiceConstants.orderCreationSuccess, "data", orderResponse);
                     return ResponseEntity.status(HttpStatus.CREATED).body(statusResponse);
                 }
 
@@ -187,22 +185,70 @@ public class OrderService {
                         .message(ServiceConstants.UnsuccessfullOrderCreation).build());
     }
 
-    public Boolean validateBuyAgainstMarketData(Order order){
+    public Boolean validateBuyAgainstMarketData(Order order) {
         ObjectMapper mapper = new ObjectMapper();
-        List<MarketData> marketData = mapper.convertValue(kafkaConsumer.payload, new TypeReference<>() {});
-        List<?> marketData1 = marketData.stream().filter(data->data.getTICKER().equals(order.getProduct()))
-                .filter(x->(Math.abs(x.getASK_PRICE() - order.getPrice()) >0.5 && Math.abs(x.getASK_PRICE() - order.getPrice())<=1.0))
+        List<MarketData> marketData = mapper.convertValue(kafkaConsumer.payload, new TypeReference<>() {
+        });
+        List<?> marketData1 = marketData.stream().filter(data -> data.getTICKER().equals(order.getProduct()))
+                .filter(x -> (Math.abs(x.getASK_PRICE() - order.getPrice()) > 0.5 && Math.abs(x.getASK_PRICE() - order.getPrice()) <= 1.0))
                 .toList();
         return !marketData1.isEmpty();
     }
 
-    public Boolean validateSellAgainstMarketData(Order order){
+    public Boolean validateSellAgainstMarketData(Order order) {
         ObjectMapper mapper = new ObjectMapper();
-        List<MarketData> marketData = mapper.convertValue(kafkaConsumer.payload, new TypeReference<>() {});
+        List<MarketData> marketData = mapper.convertValue(kafkaConsumer.payload, new TypeReference<>() {
+        });
         List<?> marketData1 = marketData.stream()
-                .filter(x-> x.getTICKER().equals(order.getProduct()))
-                .filter(x-> (Math.abs(x.getBID_PRICE()-order.getPrice())<=0 && (Math.abs(x.getBUY_LIMIT() - order.getQuantity())<=1.0)))
+                .filter(x -> x.getTICKER().equals(order.getProduct()))
+                .filter(x -> (Math.abs(x.getBID_PRICE() - order.getPrice()) <= 0 && (Math.abs(x.getBUY_LIMIT() - order.getQuantity()) <= 1.0)))
                 .toList();
         return !marketData1.isEmpty();
+    }
+
+    public ResponseEntity<?> cancelOrder(String orderId) {
+        UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        User user = userRepository.getReferenceById(userDetails.getId());
+        Optional<Order> order = orderRepository.findOrderByOrderId(orderId);
+        if (order.isPresent()) {
+            if (order.get().getOrderStatus().equals(ServiceConstants.orderStatusOpen)) {
+                ResponseEntity<?> response = getOrderById(orderId);
+                OrderExecution orderExecution = (OrderExecution) response.getBody();
+                if (orderExecution != null) {
+                    double executedAmount = orderExecution.getCumulatitivePrice() * orderExecution.getCommulativeQuantity();
+                    if(cancelOrderOnExchange(orderId)){
+                        user.setBalance(user.getBalance() + executedAmount);
+                        orderRepository.delete(order.get());
+                        userRepository.save(user);
+                        return ResponseEntity
+                                .status(HttpStatus.NO_CONTENT)
+                                .body(Map
+                                        .of("status",ServiceConstants.successStatus, "message",ServiceConstants.orderCancelSuccess));
+                    }
+                }
+            }
+        }
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(Map
+                        .of("status",ServiceConstants.failureStatus, "message",ServiceConstants.orderCancelFailure));
+    }
+
+
+    public Boolean cancelOrderOnExchange(String orderId) {
+        try {
+            Boolean response = webClient
+                    .delete()
+                    .uri("/order/" + orderId)
+                    .retrieve()
+                    .bodyToMono(Boolean.class)
+                    .block();
+            if(response == Boolean.TRUE){
+                return true;
+            }
+        } catch (WebClientResponseException | WebClientRequestException e) {
+            return false;
+        }
+        return false;
     }
 }
