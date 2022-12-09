@@ -12,8 +12,6 @@ import com.tlc.group.seven.orderprocessingservice.authentication.repository.Role
 import com.tlc.group.seven.orderprocessingservice.authentication.repository.UserRepository;
 import com.tlc.group.seven.orderprocessingservice.authentication.security.jwt.JwtUtils;
 import com.tlc.group.seven.orderprocessingservice.constant.ServiceConstants;
-import com.tlc.group.seven.orderprocessingservice.kafka.producer.KafkaProducer;
-import com.tlc.group.seven.orderprocessingservice.log.system.model.SystemLog;
 import com.tlc.group.seven.orderprocessingservice.log.system.service.SystemLogService;
 import com.tlc.group.seven.orderprocessingservice.portfolio.model.Portfolio;
 import com.tlc.group.seven.orderprocessingservice.portfolio.repository.PortfolioRepository;

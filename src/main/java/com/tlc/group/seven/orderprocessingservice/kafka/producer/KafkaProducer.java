@@ -32,7 +32,7 @@ public class KafkaProducer {
     }
 
     public void sendResponseToKafkaLogData(SystemLog data){
-        LOGGER.info(String.format("LogData:: Response sent to Kafka -> %s", data.toString()));
+        LOGGER.info(String.format("SystemLog:: Response sent to Kafka -> %s", data.toString()));
         Message<SystemLog> message = MessageBuilder
                 .withPayload(data)
                 .setHeader(KafkaHeaders.TOPIC, "log-data")
