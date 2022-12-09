@@ -12,6 +12,9 @@ import com.tlc.group.seven.orderprocessingservice.authentication.repository.Role
 import com.tlc.group.seven.orderprocessingservice.authentication.repository.UserRepository;
 import com.tlc.group.seven.orderprocessingservice.authentication.security.jwt.JwtUtils;
 import com.tlc.group.seven.orderprocessingservice.constant.ServiceConstants;
+import com.tlc.group.seven.orderprocessingservice.kafka.producer.KafkaProducer;
+import com.tlc.group.seven.orderprocessingservice.log.system.model.SystemLog;
+import com.tlc.group.seven.orderprocessingservice.log.system.service.SystemLogService;
 import com.tlc.group.seven.orderprocessingservice.portfolio.model.Portfolio;
 import com.tlc.group.seven.orderprocessingservice.portfolio.repository.PortfolioRepository;
 import com.tlc.group.seven.orderprocessingservice.portfolio.service.PortfolioService;
@@ -47,7 +50,11 @@ public class AuthenticationService {
     @Autowired
     PortfolioRepository portfolioRepository;
 
+    @Autowired
+    SystemLogService systemLogService;
+
     public ResponseEntity<?> authenticateUserLogin(LoginRequest loginRequest){
+        systemLogService.sendSystemLogToReportingService("authenticateUserLogin", ServiceConstants.userTriggeredEvent, "user initiated login");
         Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(loginRequest.getEmail(),loginRequest.getPassword()));
         SecurityContextHolder.getContext().setAuthentication(authentication);
         String jwt = jwtUtils.generateJwtToken(authentication);
@@ -59,6 +66,7 @@ public class AuthenticationService {
             defaultPortfolio.setUsers(user);
             defaultPortfolio.setQuantity(0);
             portfolioRepository.save(defaultPortfolio);
+            systemLogService.sendSystemLogToReportingService("portfolio.isEmpty()", ServiceConstants.systemTriggeredEvent, "default portfolio created on init login if portfolio empty");
         }
         List<String> roles = userDetails.getAuthorities().stream().map(GrantedAuthority::getAuthority).collect(Collectors.toList());
         Map<?, ?> response = Map
@@ -67,13 +75,17 @@ public class AuthenticationService {
                         "accessToken",jwt,
                         "data", new JwtResponse(userDetails.getId(),userDetails.getName(),userDetails.getEmail(),
                                 roles,userDetails.getBalance(), ServiceConstants.successStatus));
+        systemLogService.sendSystemLogToReportingService("authenticateUserLogin", ServiceConstants.systemTriggeredEvent, ServiceConstants.userLoginSuccess + " user_id: " + userDetails.getId());
         return ResponseEntity.ok(response);
     }
 
     public ResponseEntity<?> registerUser(SignupRequest signUpRequest) throws RoleNotFoundException {
+        systemLogService.sendSystemLogToReportingService("registerUser", ServiceConstants.userTriggeredEvent, "new user is creating account");
+
         if (userRepository.existsByEmail(signUpRequest.getEmail())) {
             Map<String,String> hashResponse = Map
-                    .of("status",ServiceConstants.failureStatus,"message",ServiceConstants.emailAlreadyTaken);
+                    .of("status", ServiceConstants.failureStatus,"message", ServiceConstants.emailAlreadyTaken);
+            systemLogService.sendSystemLogToReportingService("userRepository.existsByEmail", ServiceConstants.userTriggeredEvent, ServiceConstants.emailAlreadyTaken);
             return ResponseEntity
                     .badRequest()
                     .body(hashResponse);
@@ -86,6 +98,8 @@ public class AuthenticationService {
         Set<String> strRoles = signUpRequest.getRole();
         Set<Role> roles = new HashSet<>();
         if (strRoles == null) {
+            systemLogService.sendSystemLogToReportingService("create account", ServiceConstants.systemTriggeredEvent, "strRoles is null :: user");
+
             Role userRole = roleRepository.findByName(ERole.USER)
                     .orElseThrow(() -> new RoleNotFoundException(HttpStatus.BAD_REQUEST,ServiceConstants.roleNotFoundFailure));
             roles.add(userRole);
@@ -104,11 +118,13 @@ public class AuthenticationService {
                     }
                 }
             }
+            systemLogService.sendSystemLogToReportingService("create account", ServiceConstants.systemTriggeredEvent, "strRoles is not null :: admin");
         }
         user.setRoles(roles);
         user.setBalance(50000.00);
         userRepository.save(user);
-        Map<?, ?> response = Map.of("status",ServiceConstants.successStatus, "message",ServiceConstants.successUserCreation,"data", new UserCreationResponse(user.getID(), user.getName(),user.getEmail(),user.getBalance()));
+        systemLogService.sendSystemLogToReportingService("register user", ServiceConstants.systemTriggeredEvent, ServiceConstants.successUserCreation + " user_id: " + user.getID());
+        Map<?, ?> response = Map.of("status",ServiceConstants.successStatus, "message", ServiceConstants.successUserCreation,"data", new UserCreationResponse(user.getID(), user.getName(),user.getEmail(),user.getBalance()));
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(response);
 

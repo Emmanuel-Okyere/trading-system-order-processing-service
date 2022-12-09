@@ -1,6 +1,6 @@
 package com.tlc.group.seven.orderprocessingservice.kafka.producer;
 
-import com.tlc.group.seven.orderprocessingservice.log.system.SystemLog;
+import com.tlc.group.seven.orderprocessingservice.log.system.model.SystemLog;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.kafka.core.KafkaTemplate;

@@ -1,4 +1,4 @@
-package com.tlc.group.seven.orderprocessingservice.log.system;
+package com.tlc.group.seven.orderprocessingservice.log.system.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -16,5 +16,4 @@ public class SystemLog {
     private String event;
     private String description;
     private String service;
-    private Date timestamp;
 }

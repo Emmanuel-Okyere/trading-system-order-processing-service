@@ -38,4 +38,7 @@ public interface ServiceConstants {
      String orderCancelSuccess = "order cancellation success";
      String orderCancelFailure = "order cancellation failed or has been fulfilled";
      String userBadCredential = "password and/or email address invalid";
+     String microserviceServiceName = "Order Processing";
+     String userTriggeredEvent = "user triggered";
+     String systemTriggeredEvent = "system triggered";
 }
