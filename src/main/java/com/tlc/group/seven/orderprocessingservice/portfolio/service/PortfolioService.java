@@ -82,6 +82,12 @@ public class PortfolioService {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
             }
             else{
+                List<Order> openOrders = orderRepository.findOrderByPortfolio_iD(portfolioId).stream().filter(order -> order.getOrderStatus().equals(ServiceConstants.orderStatusOpen)).toList();
+                if(openOrders.size() > 0){
+                    systemLogService.sendSystemLogToReportingService("deletePortfolio", ServiceConstants.systemTriggeredEvent, "Error deleting: "+portfolioId + " because it has open orders");
+                    Map<?,?> response = Map.of("status",ServiceConstants.failureStatus,"message",ServiceConstants.openOrderPortfolioDeleteFailure);
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+                }
                 systemLogService.sendSystemLogToReportingService("deletePortfolio", ServiceConstants.systemTriggeredEvent, "Portfolio Deletion Successful: "+portfolioId);
                 portfolioRepository.delete(portfolio.get());
                 Map<?,?> response = Map.of("status",ServiceConstants.successStatus,"message",ServiceConstants.portfolioDeleteSuccess);

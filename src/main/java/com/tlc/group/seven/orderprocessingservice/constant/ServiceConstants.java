@@ -41,4 +41,5 @@ public interface ServiceConstants {
      String microserviceServiceName = "Order Processing";
      String userTriggeredEvent = "user triggered";
      String systemTriggeredEvent = "system triggered";
+     String openOrderPortfolioDeleteFailure = "cannot delete portfolio with open orders";
 }
