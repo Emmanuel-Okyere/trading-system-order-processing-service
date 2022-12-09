@@ -19,8 +19,6 @@ public class OrderController {
 //    @PreAuthorize("hasRole('USER')")
     @PostMapping
     public ResponseEntity<?> createOrder(@RequestBody @Valid Order order) {
-        System.out.println("*******************************");
-        System.out.println(order);
         return orderService.createOrder(order);
     }
 
