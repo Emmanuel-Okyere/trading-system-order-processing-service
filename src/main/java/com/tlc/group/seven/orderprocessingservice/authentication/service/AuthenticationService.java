@@ -85,7 +85,7 @@ public class AuthenticationService {
                     .of("status", ServiceConstants.failureStatus,"message", ServiceConstants.emailAlreadyTaken);
             systemLogService.sendSystemLogToReportingService("userRepository.existsByEmail", ServiceConstants.userTriggeredEvent, ServiceConstants.emailAlreadyTaken);
             return ResponseEntity
-                    .badRequest()
+                    .status(HttpStatus.OK)
                     .body(hashResponse);
         }
         // Create new user's account
@@ -99,19 +99,19 @@ public class AuthenticationService {
             systemLogService.sendSystemLogToReportingService("create account", ServiceConstants.systemTriggeredEvent, "strRoles is null :: user");
 
             Role userRole = roleRepository.findByName(ERole.USER)
-                    .orElseThrow(() -> new RoleNotFoundException(HttpStatus.BAD_REQUEST,ServiceConstants.roleNotFoundFailure));
+                    .orElseThrow(() -> new RoleNotFoundException(HttpStatus.OK,ServiceConstants.roleNotFoundFailure));
             roles.add(userRole);
         } else {
             for (String role : strRoles) {
                 switch (role) {
                     case "admin" -> {
                         Role adminRole = roleRepository.findByName(ERole.ADMIN)
-                                .orElseThrow(() -> new RoleNotFoundException(HttpStatus.BAD_REQUEST,ServiceConstants.roleNotFoundFailure));
+                                .orElseThrow(() -> new RoleNotFoundException(HttpStatus.OK,ServiceConstants.roleNotFoundFailure));
                         roles.add(adminRole);
                     }
                     default -> {
                         Role userRole = roleRepository.findByName(ERole.USER)
-                                .orElseThrow(() -> new RoleNotFoundException(HttpStatus.BAD_REQUEST,ServiceConstants.roleNotFoundFailure));
+                                .orElseThrow(() -> new RoleNotFoundException(HttpStatus.OK,ServiceConstants.roleNotFoundFailure));
                         roles.add(userRole);
                     }
                 }

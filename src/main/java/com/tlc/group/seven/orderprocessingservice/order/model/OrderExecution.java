@@ -20,7 +20,7 @@ public class OrderExecution {
     @Size (min = 3)
     private String side;
     @NotNull
-    private int commulativeQuantity;
+    private int cumulatitiveQuantity;
     @NotNull
     private Double cumulatitivePrice;
     @NotBlank

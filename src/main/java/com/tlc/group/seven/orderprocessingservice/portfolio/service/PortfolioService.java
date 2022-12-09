@@ -48,7 +48,7 @@ public class PortfolioService {
         }
        else {
             Map<?,?> statusResponse = Map.of("status", ServiceConstants.failureStatus,"message",ServiceConstants.portfolioCreationFailure,"error", ServiceConstants.portfolioNameTaken);
-           return  ResponseEntity.status(HttpStatus.BAD_REQUEST).body(statusResponse);
+           return  ResponseEntity.status(HttpStatus.OK).body(statusResponse);
         }
     }
 
@@ -58,11 +58,11 @@ public class PortfolioService {
         Optional<List<Portfolio>> portfolios = portfolioRepository.findPortfoliosByUsers_iD(user.getID());
         if(portfolios.isPresent()){
             Map<?,?> statusResponse = Map.of("status", ServiceConstants.successStatus,"message",ServiceConstants.portfolioGettingSuccess,"data", portfolios.get());
-            return  ResponseEntity.status(HttpStatus.BAD_REQUEST).body(statusResponse);
+            return  ResponseEntity.status(HttpStatus.OK).body(statusResponse);
         }
         else {
             Map<?,?> statusResponse = Map.of("status", ServiceConstants.successStatus,"message",ServiceConstants.portfolioGettingSuccess,"data", new ArrayList<>());
-            return  ResponseEntity.status(HttpStatus.BAD_REQUEST).body(statusResponse);
+            return  ResponseEntity.status(HttpStatus.OK).body(statusResponse);
         }
     }
 
@@ -79,24 +79,24 @@ public class PortfolioService {
         if(portfolio.isPresent()){
             if(portfolio.get().getTicker().equals(ServiceConstants.defaultPortfolio)){
                 Map<?,?> response = Map.of("status",ServiceConstants.failureStatus,"message",ServiceConstants.defaultPortfolioDeleteFailure);
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+                return ResponseEntity.status(HttpStatus.OK).body(response);
             }
             else{
                 List<Order> openOrders = orderRepository.findOrderByPortfolio_iD(portfolioId).stream().filter(order -> order.getOrderStatus().equals(ServiceConstants.orderStatusOpen)).toList();
                 if(openOrders.size() > 0){
                     systemLogService.sendSystemLogToReportingService("deletePortfolio", ServiceConstants.systemTriggeredEvent, "Error deleting: "+portfolioId + " because it has open orders");
                     Map<?,?> response = Map.of("status",ServiceConstants.failureStatus,"message",ServiceConstants.openOrderPortfolioDeleteFailure);
-                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+                    return ResponseEntity.status(HttpStatus.OK).body(response);
                 }
                 systemLogService.sendSystemLogToReportingService("deletePortfolio", ServiceConstants.systemTriggeredEvent, "Portfolio Deletion Successful: "+portfolioId);
                 portfolioRepository.delete(portfolio.get());
                 Map<?,?> response = Map.of("status",ServiceConstants.successStatus,"message",ServiceConstants.portfolioDeleteSuccess);
-                return ResponseEntity.status(HttpStatus.NO_CONTENT).body(response);
+                return ResponseEntity.status(HttpStatus.OK).body(response);
             }
         }
         else {
             Map<?,?> response = Map.of("status",ServiceConstants.failureStatus,"message",ServiceConstants.portfolioDeleteFailure);
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+            return ResponseEntity.status(HttpStatus.OK).body(response);
         }
     }
     public ResponseEntity<?> toUpUserAccount(TopUpRequest topUpRequest) {

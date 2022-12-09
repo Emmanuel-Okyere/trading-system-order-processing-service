@@ -59,7 +59,7 @@ public class OrderService {
                     return makeOrderToExchange(order, user);
                 } else{
                     systemLogService.sendSystemLogToReportingService("createOrder", ServiceConstants.systemTriggeredEvent,"User sell order is invalid, OrderCanceled");
-                    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    return ResponseEntity.status(HttpStatus.OK)
                             .body(ErrorResponse.builder()
                                     .status(ServiceConstants.failureStatus)
                                     .message(ServiceConstants.portfolioCannotMakeOrder).build());
@@ -70,7 +70,7 @@ public class OrderService {
                     return makeOrderToExchange(order, user);
                 } else {
                     systemLogService.sendSystemLogToReportingService("createOrder", ServiceConstants.systemTriggeredEvent,"User buy order is invalid, orderCanceled");
-                    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    return ResponseEntity.status(HttpStatus.OK)
                         .body(ErrorResponse.builder()
                                 .status(ServiceConstants.failureStatus)
                                 .message(ServiceConstants.insufficientBalance).build());
@@ -78,7 +78,7 @@ public class OrderService {
             }
         }
         systemLogService.sendSystemLogToReportingService("createOrder", ServiceConstants.systemTriggeredEvent,"User buy order is invalid, orderCanceled");
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+        return ResponseEntity.status(HttpStatus.OK)
                 .body(ErrorResponse.builder()
                         .status(ServiceConstants.failureStatus)
                         .message(ServiceConstants.UnsuccessfullOrderCreation).build());
@@ -102,7 +102,7 @@ public class OrderService {
                     response.setUpdatedAt(new Date());
                     response.setOrderStatus(ServiceConstants.orderStatusOpen);
                     if (order.get().getOrderStatus().equals(ServiceConstants.orderStatusOpen)) {
-                        if (response.getCommulativeQuantity() == 0) {
+                        if (response.getCumulatitiveQuantity() == order.get().getQuantity()) {
                             if(order.get().getSide().equalsIgnoreCase("sell")){
                                 order.get().getPortfolio().setQuantity(order.get().getPortfolio().getQuantity()-order.get().getQuantity());
                             }
@@ -125,7 +125,7 @@ public class OrderService {
             } catch (WebClientResponseException | WebClientRequestException e) {
                 systemLogService.sendSystemLogToReportingService("getOrderById", ServiceConstants.userTriggeredEvent, "Oder does not exist for user");
                 return ResponseEntity
-                        .status(HttpStatus.NOT_FOUND)
+                        .status(HttpStatus.OK)
                         .body(ErrorResponse
                                 .builder()
                                 .message(ServiceConstants.orderGettingError)
@@ -135,7 +135,7 @@ public class OrderService {
         }
         systemLogService.sendSystemLogToReportingService("getOrderById", ServiceConstants.userTriggeredEvent, "Oder does not exist for user");
         return ResponseEntity
-                .status(HttpStatus.NOT_FOUND)
+                .status(HttpStatus.OK)
                 .body(ErrorResponse
                         .builder()
                         .message(ServiceConstants.orderGettingError)
@@ -204,13 +204,13 @@ public class OrderService {
             }
         } catch (WebClientResponseException | WebClientRequestException e) {
             systemLogService.sendSystemLogToReportingService("makeOrderToExchange", ServiceConstants.systemTriggeredEvent, "Order creation unsuccessful");
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+            return ResponseEntity.status(HttpStatus.OK)
                     .body(ErrorResponse.builder()
                             .status(ServiceConstants.failureStatus)
                             .message(ServiceConstants.UnsuccessfullOrderCreation).build());
         }
         systemLogService.sendSystemLogToReportingService("makeOrderToExchange", ServiceConstants.systemTriggeredEvent, "Order creation unsuccessful");
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+        return ResponseEntity.status(HttpStatus.OK)
                 .body(ErrorResponse.builder()
                         .status(ServiceConstants.failureStatus)
                         .message(ServiceConstants.UnsuccessfullOrderCreation).build());
@@ -247,7 +247,7 @@ public class OrderService {
         if (order.isPresent()) {
             if (order.get().getOrderStatus().equals(ServiceConstants.orderStatusOpen)) {
                 if (orderExecution != null) {
-                    double executedAmount = orderExecution.getPrice() * (orderExecution.getQuantity()-orderExecution.getCommulativeQuantity());
+                    double executedAmount = orderExecution.getPrice() * (orderExecution.getQuantity()-orderExecution.getCumulatitiveQuantity());
                     if(cancelOrderOnExchange(orderId)){
                         user.setBalance(user.getBalance() + executedAmount);
                         orderRepository.delete(order.get());
@@ -263,7 +263,7 @@ public class OrderService {
         }
         systemLogService.sendSystemLogToReportingService("cancelOrder", ServiceConstants.systemTriggeredEvent, "Order Cancellation unsuccessful");
         return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
+                .status(HttpStatus.OK)
                 .body(Map
                         .of("status",ServiceConstants.failureStatus, "message",ServiceConstants.orderCancelFailure));
     }

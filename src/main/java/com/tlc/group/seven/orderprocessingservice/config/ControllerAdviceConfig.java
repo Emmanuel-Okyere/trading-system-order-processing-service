@@ -27,7 +27,7 @@ public class ControllerAdviceConfig {
 
         Map<String, ?> errors = Map.
                 of("errors", body,"status",ServiceConstants.failureStatus, "message",ServiceConstants.creationFailure);
-        return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
+        return ResponseEntity.status(HttpStatus.OK).body(errors);
     }
     @ExceptionHandler(ResponseStatusException.class)
     public ResponseEntity <ErrorResponse> handleAllResponseEntity(ResponseStatusException responseStatusException){
@@ -35,7 +35,7 @@ public class ControllerAdviceConfig {
                 .status(ServiceConstants.failureStatus)
                 .message(ServiceConstants.roleNotFoundFailure)
                 .build();
-        return ResponseEntity.badRequest().body(errorResponse);
+        return ResponseEntity.status(HttpStatus.OK).body(errorResponse);
 
     }
 
@@ -45,6 +45,6 @@ public class ControllerAdviceConfig {
                 .status(ServiceConstants.failureStatus)
                 .message(ServiceConstants.userNotFoundFailure)
                 .build();
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
+        return ResponseEntity.status(HttpStatus.OK).body(errorResponse);
     }
 }
