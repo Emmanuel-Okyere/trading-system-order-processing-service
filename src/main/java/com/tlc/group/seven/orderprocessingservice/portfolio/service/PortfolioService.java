@@ -4,6 +4,7 @@ import com.tlc.group.seven.orderprocessingservice.authentication.model.User;
 import com.tlc.group.seven.orderprocessingservice.authentication.repository.UserRepository;
 import com.tlc.group.seven.orderprocessingservice.authentication.service.UserDetailsImpl;
 import com.tlc.group.seven.orderprocessingservice.constant.ServiceConstants;
+import com.tlc.group.seven.orderprocessingservice.log.system.service.SystemLogService;
 import com.tlc.group.seven.orderprocessingservice.order.model.Order;
 import com.tlc.group.seven.orderprocessingservice.order.repository.OrderRepository;
 import com.tlc.group.seven.orderprocessingservice.portfolio.model.Portfolio;
@@ -15,7 +16,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
-import javax.validation.Valid;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -31,14 +31,18 @@ public class PortfolioService {
     private UserRepository userRepository;
     @Autowired
     private OrderRepository orderRepository;
+    @Autowired
+    private SystemLogService systemLogService;
 
     public ResponseEntity<?> createPortfolio(Portfolio portfolio){
         UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         User user = userRepository.getReferenceById(userDetails.getId());
+        systemLogService.sendSystemLogToReportingService("createPortfolio", ServiceConstants.userTriggeredEvent, "Portfolio Creation Initiated");
         if(portfolioRepository.findPortfolioByTickerAndUsers_iD(portfolio.getTicker(),user.getID()).isEmpty()){
             portfolio.setUsers(user);
             portfolio.setQuantity(0);
             portfolioRepository.save(portfolio);
+            systemLogService.sendSystemLogToReportingService("createPortfolio", ServiceConstants.systemTriggeredEvent, "Portfolio Creation successful");
             Map<?,?> statusResponse = Map.of("status", ServiceConstants.successStatus,"message",ServiceConstants.portfolioCreationSuccess,"data", portfolio);
             return ResponseEntity.status(HttpStatus.CREATED).body(statusResponse);
         }
@@ -71,12 +75,14 @@ public class PortfolioService {
 
     public ResponseEntity<?> deletePortfolio(Long portfolioId) {
         Optional<Portfolio> portfolio = portfolioRepository.findById(portfolioId);
+        systemLogService.sendSystemLogToReportingService("deletePortfolio", ServiceConstants.userTriggeredEvent, "Portfolio Deletion Initiated: "+portfolioId);
         if(portfolio.isPresent()){
             if(portfolio.get().getTicker().equals(ServiceConstants.defaultPortfolio)){
                 Map<?,?> response = Map.of("status",ServiceConstants.failureStatus,"message",ServiceConstants.defaultPortfolioDeleteFailure);
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
             }
             else{
+                systemLogService.sendSystemLogToReportingService("deletePortfolio", ServiceConstants.systemTriggeredEvent, "Portfolio Deletion Successful: "+portfolioId);
                 portfolioRepository.delete(portfolio.get());
                 Map<?,?> response = Map.of("status",ServiceConstants.successStatus,"message",ServiceConstants.portfolioDeleteSuccess);
                 return ResponseEntity.status(HttpStatus.NO_CONTENT).body(response);
@@ -90,7 +96,9 @@ public class PortfolioService {
     public ResponseEntity<?> toUpUserAccount(TopUpRequest topUpRequest) {
         UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         User user = userRepository.getReferenceById(userDetails.getId());
+        systemLogService.sendSystemLogToReportingService("toUpUserAccount", ServiceConstants.userTriggeredEvent, "Account Top initiated");
         user.setBalance(user.getBalance()+topUpRequest.getAmountToTopUp());
+        systemLogService.sendSystemLogToReportingService("toUpUserAccount", ServiceConstants.userTriggeredEvent, "Account Top successful");
         userRepository.save(user);
         Map<?, ?> response = Map.of("status",ServiceConstants.successStatus, "message",ServiceConstants.topUpSuccess,"data",  Map.of("currentBalance",user.getBalance()));
         return ResponseEntity.status(HttpStatus.CREATED)

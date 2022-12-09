@@ -7,6 +7,7 @@ import com.tlc.group.seven.orderprocessingservice.authentication.repository.User
 import com.tlc.group.seven.orderprocessingservice.authentication.service.UserDetailsImpl;
 import com.tlc.group.seven.orderprocessingservice.constant.ServiceConstants;
 import com.tlc.group.seven.orderprocessingservice.kafka.consumer.KafkaConsumer;
+import com.tlc.group.seven.orderprocessingservice.log.system.service.SystemLogService;
 import com.tlc.group.seven.orderprocessingservice.order.model.MarketData;
 import com.tlc.group.seven.orderprocessingservice.order.model.Order;
 import com.tlc.group.seven.orderprocessingservice.order.model.OrderExecution;
@@ -41,6 +42,8 @@ public class OrderService {
     private PortfolioRepository portfolioRepository;
     @Autowired
     private KafkaConsumer kafkaConsumer;
+    @Autowired
+    private SystemLogService systemLogService;
     private final String exchangeURL = ServiceConstants.exchangeURL;
     private final String exchange2URL = ServiceConstants.exchange2URL;
     WebClient webClient = WebClient.create(exchangeURL);
@@ -48,23 +51,33 @@ public class OrderService {
     public ResponseEntity<?> createOrder(Order order) {
         UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         User user = userRepository.getReferenceById(userDetails.getId());
+        systemLogService.sendSystemLogToReportingService("createOrder", ServiceConstants.userTriggeredEvent, "User order creation initiated");
         switch (order.getSide().toLowerCase()) {
             case "sell":
                 if (validateSellOrderAgainstUserPortfolio(order) && validateSellAgainstMarketData(order)) {
+                    systemLogService.sendSystemLogToReportingService("createOrder", ServiceConstants.systemTriggeredEvent,"User order is valid so, making order to exhange");
                     return makeOrderToExchange(order, user);
-                } else return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body(ErrorResponse.builder()
-                                .status(ServiceConstants.failureStatus)
-                                .message(ServiceConstants.portfolioCannotMakeOrder).build());
+                } else{
+                    systemLogService.sendSystemLogToReportingService("createOrder", ServiceConstants.systemTriggeredEvent,"User sell order is invalid, OrderCanceled");
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                            .body(ErrorResponse.builder()
+                                    .status(ServiceConstants.failureStatus)
+                                    .message(ServiceConstants.portfolioCannotMakeOrder).build());
+                }
             case "buy": {
                 if (validateBuyOrderAgainstUserPortfolio(order) && validateBuyAgainstMarketData(order)) {
+                    systemLogService.sendSystemLogToReportingService("createOrder", ServiceConstants.systemTriggeredEvent,"User buy order is valid so, making order to exhange");
                     return makeOrderToExchange(order, user);
-                } else return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                } else {
+                    systemLogService.sendSystemLogToReportingService("createOrder", ServiceConstants.systemTriggeredEvent,"User buy order is invalid, orderCanceled");
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                         .body(ErrorResponse.builder()
                                 .status(ServiceConstants.failureStatus)
                                 .message(ServiceConstants.insufficientBalance).build());
             }
+            }
         }
+        systemLogService.sendSystemLogToReportingService("createOrder", ServiceConstants.systemTriggeredEvent,"User buy order is invalid, orderCanceled");
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(ErrorResponse.builder()
                         .status(ServiceConstants.failureStatus)
@@ -74,6 +87,7 @@ public class OrderService {
     public ResponseEntity<?> getOrderById(String orderId) {
         UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         User user = userRepository.getReferenceById(userDetails.getId());
+        systemLogService.sendSystemLogToReportingService("getOrderById", ServiceConstants.userTriggeredEvent, "User order getting by orderId initiated");
         Optional<Order> order = orderRepository.findOrderByOrderId(orderId);
         if (order.isPresent()) {
             try {
@@ -86,6 +100,7 @@ public class OrderService {
                 if (response != null) {
                     response.setCreatedAt(order.get().getCreatedAt());
                     response.setUpdatedAt(new Date());
+                    response.setOrderStatus(ServiceConstants.orderStatusOpen);
                     if (order.get().getOrderStatus().equals(ServiceConstants.orderStatusOpen)) {
                         if (response.getCommulativeQuantity() == 0) {
                             if(order.get().getSide().equalsIgnoreCase("sell")){
@@ -96,17 +111,19 @@ public class OrderService {
                             }
                             portfolioRepository.save(order.get().getPortfolio());
                             order.get().setOrderStatus(ServiceConstants.orderStatusClose);
+                            response.setOrderStatus(ServiceConstants.orderStatusClose);
                             user.setBalance(user.getBalance()+(response.getQuantity() * response.getCumulatitivePrice()));
+                            systemLogService.sendSystemLogToReportingService("getOrderById", ServiceConstants.systemTriggeredEvent, "Updating users balance");
                             orderRepository.save(order.get());
                             userRepository.save(user);
                         }
-                    }
-                    return ResponseEntity
+                    }return ResponseEntity
                             .status(HttpStatus.OK)
                             .body(Map
                                     .of("status",ServiceConstants.successStatus,"message",ServiceConstants.ordersGettingSuccess,"data",response));
                 }
             } catch (WebClientResponseException | WebClientRequestException e) {
+                systemLogService.sendSystemLogToReportingService("getOrderById", ServiceConstants.userTriggeredEvent, "Oder does not exist for user");
                 return ResponseEntity
                         .status(HttpStatus.NOT_FOUND)
                         .body(ErrorResponse
@@ -116,6 +133,7 @@ public class OrderService {
                                 .build());
             }
         }
+        systemLogService.sendSystemLogToReportingService("getOrderById", ServiceConstants.userTriggeredEvent, "Oder does not exist for user");
         return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)
                 .body(ErrorResponse
@@ -152,6 +170,7 @@ public class OrderService {
     }
 
     public ResponseEntity<?> makeOrderToExchange(Order order, User user) {
+        systemLogService.sendSystemLogToReportingService("createOrder", ServiceConstants.systemTriggeredEvent, "Placing order on exchange initiated");
         try {
             String response = webClient
                     .post()
@@ -177,17 +196,20 @@ public class OrderService {
                             order.getQuantity(), order.getProduct(),
                             order.getPrice(), order.getType(),
                             order.getOrderStatus());
+                    systemLogService.sendSystemLogToReportingService("makeOrderToExchange", ServiceConstants.systemTriggeredEvent, "Oder created on exchange");
                     Map<?, ?> statusResponse = Map.of("status", ServiceConstants.successStatus, "message", ServiceConstants.orderCreationSuccess, "data", orderResponse);
                     return ResponseEntity.status(HttpStatus.CREATED).body(statusResponse);
                 }
 
             }
         } catch (WebClientResponseException | WebClientRequestException e) {
+            systemLogService.sendSystemLogToReportingService("makeOrderToExchange", ServiceConstants.systemTriggeredEvent, "Order creation unsuccessful");
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(ErrorResponse.builder()
                             .status(ServiceConstants.failureStatus)
                             .message(ServiceConstants.UnsuccessfullOrderCreation).build());
         }
+        systemLogService.sendSystemLogToReportingService("makeOrderToExchange", ServiceConstants.systemTriggeredEvent, "Order creation unsuccessful");
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(ErrorResponse.builder()
                         .status(ServiceConstants.failureStatus)
@@ -199,7 +221,7 @@ public class OrderService {
         List<MarketData> marketData = mapper.convertValue(kafkaConsumer.payload, new TypeReference<>() {
         });
         List<?> marketData1 = marketData.stream().filter(data -> data.getTICKER().equals(order.getProduct()))
-                .filter(x -> ((Math.abs(x.getASK_PRICE() - order.getPrice()) >= 0 && Math.abs(x.getASK_PRICE() - order.getPrice()) <= 1.0)) && (order.getQuantity()) <= x.getSELL_LIMIT())
+                .filter(x -> ((Math.abs(x.getASK_PRICE() - order.getPrice()) >= 0 && Math.abs(x.getASK_PRICE() - order.getPrice()) <= 5.0)) && (order.getQuantity()) <= x.getSELL_LIMIT())
                 .toList();
         return !marketData1.isEmpty();
     }
@@ -210,7 +232,7 @@ public class OrderService {
         });
         List<?> marketData1 = marketData.stream()
                 .filter(x -> x.getTICKER().equals(order.getProduct()))
-                .filter(x -> ((Math.abs(x.getBID_PRICE() - order.getPrice()) >= 0 && (Math.abs(x.getBID_PRICE() - order.getPrice())) <=1)) && (order.getQuantity()) <= x.getBUY_LIMIT())
+                .filter(x -> ((Math.abs(x.getBID_PRICE() - order.getPrice()) >= 0 && (Math.abs(x.getBID_PRICE() - order.getPrice())) <=5.0)) && (order.getQuantity()) <= x.getBUY_LIMIT())
                 .toList();
         return !marketData1.isEmpty();
     }
@@ -218,6 +240,7 @@ public class OrderService {
     public ResponseEntity<?> cancelOrder(String orderId) {
         UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         User user = userRepository.getReferenceById(userDetails.getId());
+        systemLogService.sendSystemLogToReportingService("cancelOrder", ServiceConstants.userTriggeredEvent, "Order Cancellation initiated");
         ResponseEntity<?> response = getOrderById(orderId);
         OrderExecution orderExecution = (OrderExecution) response.getBody();
         Optional<Order> order = orderRepository.findOrderByOrderId(orderId);
@@ -229,6 +252,7 @@ public class OrderService {
                         user.setBalance(user.getBalance() + executedAmount);
                         orderRepository.delete(order.get());
                         userRepository.save(user);
+                        systemLogService.sendSystemLogToReportingService("cancelOrder", ServiceConstants.systemTriggeredEvent, "Order Cancellation successful");
                         return ResponseEntity
                                 .status(HttpStatus.NO_CONTENT)
                                 .body(Map
@@ -237,6 +261,7 @@ public class OrderService {
                 }
             }
         }
+        systemLogService.sendSystemLogToReportingService("cancelOrder", ServiceConstants.systemTriggeredEvent, "Order Cancellation unsuccessful");
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
                 .body(Map

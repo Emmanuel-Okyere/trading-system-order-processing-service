@@ -3,7 +3,6 @@ package com.tlc.group.seven.orderprocessingservice.order.payload;
 
 import lombok.Data;
 
-import java.util.List;
 
 @Data
 public class OrderResponse {
