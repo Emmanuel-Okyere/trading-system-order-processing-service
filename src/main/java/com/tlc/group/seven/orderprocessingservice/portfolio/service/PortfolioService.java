@@ -69,7 +69,7 @@ public class PortfolioService {
     public ResponseEntity<?> getAllOrdersByUser(Long portfolioId) {
         List<Order> allByUsers_iD = orderRepository.findOrderByPortfolio_iD(portfolioId);
         Map<?,?> response = Map.of("status",ServiceConstants.successStatus,"message",ServiceConstants.ordersGettingSuccess, "data",allByUsers_iD);
-        return  ResponseEntity.status(HttpStatus.FOUND)
+        return  ResponseEntity.status(HttpStatus.OK)
                 .body(response);
     }
 
