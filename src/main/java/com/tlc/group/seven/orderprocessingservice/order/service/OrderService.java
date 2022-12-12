@@ -100,8 +100,8 @@ public class OrderService {
                 if (response != null) {
                     response.setCreatedAt(order.get().getCreatedAt());
                     response.setUpdatedAt(new Date());
-                    response.setOrderStatus(ServiceConstants.orderStatusOpen);
                     if (order.get().getOrderStatus().equals(ServiceConstants.orderStatusOpen)) {
+                        response.setOrderStatus(ServiceConstants.orderStatusOpen);
                         if (response.getCumulatitiveQuantity() == order.get().getQuantity()) {
                             if(order.get().getSide().equalsIgnoreCase("sell")){
                                 order.get().getPortfolio().setQuantity(order.get().getPortfolio().getQuantity()-order.get().getQuantity());
@@ -117,10 +117,13 @@ public class OrderService {
                             orderRepository.save(order.get());
                             userRepository.save(user);
                         }
-                    }return ResponseEntity
+                    }
+                    else {
+                        response.setOrderStatus(ServiceConstants.orderStatusClose);
+                    }
+                    return ResponseEntity
                             .status(HttpStatus.OK)
-                            .body(Map
-                                    .of("status",ServiceConstants.successStatus,"message",ServiceConstants.ordersGettingSuccess,"data",response));
+                            .body(response);
                 }
             } catch (WebClientResponseException | WebClientRequestException e) {
                 systemLogService.sendSystemLogToReportingService("getOrderById", ServiceConstants.userTriggeredEvent, "Oder does not exist for user");
@@ -242,6 +245,7 @@ public class OrderService {
         User user = userRepository.getReferenceById(userDetails.getId());
         systemLogService.sendSystemLogToReportingService("cancelOrder", ServiceConstants.userTriggeredEvent, "Order Cancellation initiated");
         ResponseEntity<?> response = getOrderById(orderId);
+        System.out.println(response.getBody());
         OrderExecution orderExecution = (OrderExecution) response.getBody();
         Optional<Order> order = orderRepository.findOrderByOrderId(orderId);
         if (order.isPresent()) {
@@ -254,7 +258,7 @@ public class OrderService {
                         userRepository.save(user);
                         systemLogService.sendSystemLogToReportingService("cancelOrder", ServiceConstants.systemTriggeredEvent, "Order Cancellation successful");
                         return ResponseEntity
-                                .status(HttpStatus.NO_CONTENT)
+                                .status(HttpStatus.OK)
                                 .body(Map
                                         .of("status",ServiceConstants.successStatus, "message",ServiceConstants.orderCancelSuccess));
                     }
