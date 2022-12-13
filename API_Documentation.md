@@ -1,11 +1,13 @@
 ## Table of Contents
 - [Registration](#registration)
 - [Authentication - Login to get Token](#login)
-- [Registration](#create-order)
+- [Portfolio](#create-portfolio)
+- [User's Portfolio](#get-portfolios)
+- [Order](#create-order)
 
-- 
+
 <a name="registration"></a>
-- ## Registration
+## Registration
 
 The register API will accept user credentials:
 username,email and password and saves it to the database.
@@ -118,10 +120,10 @@ identity.
 ```
 
 <a name="create-order"></a>
-- ## Registration
+## Order
 
 The register API will accept user credentials:
-product,quantity, price,side and type  and saves it to the database.
+product,quantity, price,side,Portfolio and type  and saves it to the database.
 **Note** Only authenticated users can access this endpoint
 ### Request Information
 
@@ -140,13 +142,14 @@ product,quantity, price,side and type  and saves it to the database.
 
 ### JSON Body
 
-| Property Name | type    | required | Description                                      |
-|---------------|---------|----------|--------------------------------------------------|
-| product       | String  | true     | The name of the ticker                           |
-| quantity      | Integer | true     | the quantity a user wants                        |
-| price         | Double  | true     | the price the user wants to buy or sell for      |
-| side          | String  | true     | whether the user is selling or buying            |
-| type          | String  | true     | The type of marl=key that the user want to trade |
+| Property Name | type    | required | Description                                                 |
+|---------------|---------|----------|-------------------------------------------------------------|
+| product       | String  | true     | The name of the ticker                                      |
+| quantity      | Integer | true     | the quantity a user wants                                   |
+| price         | Double  | true     | the price the user wants to buy or sell for                 |
+| side          | String  | true     | whether the user is selling or buying                       |
+| type          | String  | true     | The type of trade the user want to create (Market or Limit) |
+| portfolioId   | Integer | true     | The portfolio Id                                            |
 
 ### Error Responses
 
@@ -173,80 +176,129 @@ product,quantity, price,side and type  and saves it to the database.
     }
 }
 ```
-### GET Successful Response Example
-This gets the order made by a particular user.
-**Note** Only authenticated users can access this endpoint
+
+<a name="create-portfolio"></a>
+
+## Portfolio- Create
+
+This Api endpoint accepts user's name for a portfolio and create one.
+**Note** On Login, default portfolio is created if the user does not have a portfolio. The default one can not be deleted.
+
+### Request Information
+
+| Type | URL               |
+|------|-------------------|
+| POST | /api/v1/portfolio |
+
+### Header
+
+| Type         | Property name    |
+|--------------|------------------|
+| Allow        | POST, OPTIONS    |
+| Content-Type | application/json |
+| Vary         | Accept           |
+
+
+### JSON Body
+
+| Property Name | type   | required | Description               |
+|---------------|--------|----------|---------------------------|
+| ticker        | String | true     | the name of the portfolio |
+
+### Error Responses
+
+| Code | Message                           |
+|------|-----------------------------------|
+| 400  | name: This field is required.     |
+
+
+### Successful Response Example
+
 ```
 {
-    "status": "00",
-    "message": "order fetch successful",
-    "data": [
-        {
-            "product": "GOOGL",
-            "quantity": 30,
-            "price": 1.0,
-            "type": "MARKET",
-            "side": "BUY",
-            "orderId": "7369c9de-e8df-4f32-b45f-7168fb345888",
-            "createdAt": "2022-12-02T10:20:13.056+00:00",
-            "updatedAt": "2022-12-02T10:20:13.056+00:00",
-            "id": 1
-        },
-        {
-            "product": "GOOGL",
-            "quantity": 30,
-            "price": 1.0,
-            "type": "MARKET",
-            "side": "BUY",
-            "orderId": "c4424608-aaf7-4abd-97e4-18bd399766a6",
-            "createdAt": "2022-12-02T11:02:15.848+00:00",
-            "updatedAt": "2022-12-02T11:02:15.848+00:00",
-            "id": 2
-        },
-        {
-            "product": "GOOGL",
-            "quantity": 30,
-            "price": 1.0,
-            "type": "MARKET",
-            "side": "BUY",
-            "orderId": "a34a3e68-d9ff-4bcf-8bca-8ae67a12529b",
-            "createdAt": "2022-12-02T14:13:09.391+00:00",
-            "updatedAt": "2022-12-02T14:13:09.391+00:00",
-            "id": 4
-        },
-        {
-            "product": "GOOGL",
-            "quantity": 30,
-            "price": 1.0,
-            "type": "MARKET",
-            "side": "BUY",
-            "orderId": "612923f8-25fb-4dab-b05e-04fbb5f3f645",
-            "createdAt": "2022-12-02T14:17:03.929+00:00",
-            "updatedAt": "2022-12-02T14:17:03.929+00:00",
-            "id": 5
-        }
-    ]
+    "data": {
+        "ticker": "NTFX",
+        "quantity": 0,
+        "id": 10
+    },
+    "message": "portfolio creation success",
+    "status": "00"
 }
 ```
 
+<a name="get-portfolios"></a>
+
+## Users Portfolio
+
+### GET Successful Response Example
+This gets the portfolios created by a particular user.
+**Note** Only authenticated users can access this endpoint.
+
+### Request Information
+
+| Type | URL               |
+|------|-------------------|
+| GET  | /api/v1/portfolio |
+
+### Header
+
+| Type         | Property name    |
+|--------------|------------------|
+| Allow        | GET, OPTIONS     |
+| Content-Type | application/json |
+| Vary         | Accept           |
+
+
+### Successful response Example
+
+```
+{
+    "data": [
+        {
+            "ticker": "DEFAULT",
+            "quantity": 290,
+            "id": 1
+        },
+        {
+            "ticker": "MSFT",
+            "quantity": 177,
+            "id": 4
+        },
+        {
+            "ticker": "GOOGL",
+            "quantity": 0,
+            "id": 6
+        },
+        {
+            "ticker": "NTFX",
+            "quantity": 0,
+            "id": 10
+        }
+    ],
+    "message": "portfolios getting success",
+    "status": "00"
+}
+```
+
+
 <a name="get-order-by-id"></a>
 
-## Get orders by Id
+## Get orders by Portfolio ID
 
-This API endpoint is used for getting an order by id from the  system.
+This API endpoint is used for getting an order by id from the user's portfolio.
 **Note** Only authenticated users can access this endpoint
 
 ### Request Information
 
-| Type | URL                          |
-|------|------------------------------|
-| POST | /api/v1/auth/order/{orderID} |
+| Type | URL                                    |
+|------|----------------------------------------|
+| GET  | /api/v1/portfolio/{portfolioID}/orders |
 
 ### Header
 
 | Type          | Property name    |
 |---------------|------------------|
-| Allow         | POST             |
+| Allow         | GET              |
 | Content-Type  | application/json |
 | Authorization | Authenticated    |
 
@@ -262,16 +314,61 @@ This API endpoint is used for getting an order by id from the  system.
 
 ```
 {
-    "product": "GOOGL",
-    "quantity": 30,
-    "price": 0.0,
-    "orderType": "MARKET",
-    "side": "BUY",
-    "commulativeQuantity": 0,
-    "cumulatitivePrice": 0.0,
-    "orderID": "7369c9de-e8df-4f32-b45f-7168fb345888",
-    "executions": [],
-    "createdAt": "2022-12-02T10:20:13.056+00:00",
-    "updatedAt": "2022-12-02T14:25:40.856+00:00"
+    "data": [
+        {
+            "product": "MSFT",
+            "quantity": 30,
+            "price": 1.0,
+            "orderStatus": "close",
+            "type": "MARKET",
+            "side": "BUY",
+            "orderId": "54dc98f4-6441-4712-8a04-3125c6a73289",
+            "createdAt": "2022-12-09T11:00:07.519+00:00",
+            "updatedAt": "2022-12-09T11:00:55.302+00:00",
+            "portfolioId": null,
+            "id": 2
+        },
+        {
+            "product": "MSFT",
+            "quantity": 30,
+            "price": 1.0,
+            "orderStatus": "close",
+            "type": "MARKET",
+            "side": "BUY",
+            "orderId": "732c0d56-2cd4-4398-9d4e-004d3b306eb2",
+            "createdAt": "2022-12-08T16:31:15.592+00:00",
+            "updatedAt": "2022-12-12T08:59:17.608+00:00",
+            "portfolioId": null,
+            "id": 1
+        },
+        {
+            "product": "MSFT",
+            "quantity": 30,
+            "price": 1.0,
+            "orderStatus": "close",
+            "type": "MARKET",
+            "side": "BUY",
+            "orderId": "3d53c503-f9c9-4367-89f0-2ccc69abd7d3",
+            "createdAt": "2022-12-09T11:24:32.628+00:00",
+            "updatedAt": "2022-12-12T09:07:33.059+00:00",
+            "portfolioId": null,
+            "id": 3
+        },
+        {
+            "product": "MSFT",
+            "quantity": 200,
+            "price": 2.0,
+            "orderStatus": "close",
+            "type": "MARKET",
+            "side": "BUY",
+            "orderId": "237bf2e2-ee96-4877-9a71-1b726a6c7424",
+            "createdAt": "2022-12-09T14:38:12.447+00:00",
+            "updatedAt": "2022-12-12T09:14:14.094+00:00",
+            "portfolioId": null,
+            "id": 10
+        }
+    ],
+    "message": "order fetch successful",
+    "status": "00"
 }
 ```
